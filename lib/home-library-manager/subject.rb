@@ -1,6 +1,8 @@
 # borrower.rb
 #
 # Someone who is borrowing a book from you.
+require 'data_mapper'
+
 class Subject
   include DataMapper::Resource
 

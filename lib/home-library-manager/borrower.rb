@@ -1,6 +1,8 @@
 # borrower.rb
 #
 # Someone borrowing a book
+require 'data_mapper'
+
 class Borrower
   include DataMapper::Resource
 
@@ -10,5 +12,5 @@ class Borrower
   property :phone_number, String
   property :email_address, String
   
-  has_n, :books
+  has n, :books
 end

@@ -1,6 +1,8 @@
 # book.rb
 #
 # Class representing a book.
+require 'data_mapper'
+
 class Book
   include DataMapper::Resource
 
@@ -12,5 +14,7 @@ class Book
 
   has n, :authors
   has n, :subjects
+  has n, :reviews
+
   belongs_to :borrower
 end

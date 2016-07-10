@@ -1,10 +1,12 @@
 # review.rb
 #
 # Class representing a review for a book
+require 'data_mapper'
+
 class Review
   include DataMapper::Resource
   
-  property :isbn, String, :required => true
+  property :id, Serial
   property :review, Text, :required => true
   property :date, DateTime, :required => true
 
