@@ -9,8 +9,8 @@ class Review
   property :id, Serial
   property :review, Text, :required => true
   property :date, DateTime, :required => true
-  property :reviewer_first, String, :required => true
-  property :reviewer_last, String, :required => true
+  property :last_name, String, :required => true
+  property :first_name, String, :required => true
 
   belongs_to :book
 end

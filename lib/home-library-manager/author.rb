@@ -7,8 +7,8 @@ class Author
   include DataMapper::Resource
 
   property :id, Serial
-  property :author_last, String, :required => true
-  property :author_first, String, :required => true
+  property :last_name, String, :required => true
+  property :first_name, String, :required => true
 
   belongs_to :book
 end

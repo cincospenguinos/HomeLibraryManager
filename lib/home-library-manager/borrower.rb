@@ -12,6 +12,6 @@ class Borrower
   property :first_name, String, :required => true
   property :phone_number, String
   property :email_address, String
-  property :date_checked_out, DateTime
-  property :date_checked_in, DateTime
+  property :date_taken, DateTime
+  property :date_returned, DateTime
 end
