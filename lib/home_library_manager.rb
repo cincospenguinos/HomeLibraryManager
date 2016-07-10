@@ -12,6 +12,7 @@ require_relative 'home-library-manager/author.rb'
 require_relative 'home-library-manager/subject.rb'
 require_relative 'home-library-manager/review.rb'
 require_relative 'home-library-manager/borrower.rb'
+require_relative 'home-library-manager/book_information_manager'
 
 class HomeLibraryManager < Sinatra::Base
 
@@ -22,37 +23,7 @@ class HomeLibraryManager < Sinatra::Base
     DataMapper.setup(:default, "mysql://#{config['user']}:#{config['pass']}@#{config['host']}/#{config['database']}")
     DataMapper.finalize
     DataMapper.auto_migrate!
-  end
 
-  before do
-    content_type 'application/json'
-  end
-
-  # Show the index file
-  get '/' do
-    File.read('api.html')
-  end
-
-  # Run queries on current books in the library
-  get '/books' do
-    books = []
-    # TODO: This ---> THIS SO HARD
-    if params.empty?
-      Book.all().each do |book|
-        authors = []
-
-        Authors.all(:books => book.book_id).each do |auth|
-          authors.push(auth)
-        end
-
-        books.push(book)
-      end
-    end
-
-    generate_response(true, books, '')
-  end
-
-  get '/setup' do
     # This exists solely for setting up development stuff
     book = Book.create(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
     author = Author.create(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
@@ -64,7 +35,7 @@ class HomeLibraryManager < Sinatra::Base
     author = Author.create(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
     Subject.create(:name => 'Fiction', :book => book)
     Subject.create(:name => 'Literature', :book => book)
-    
+
     book = Book.create(:isbn => '978-0-06-093434-7', :title => 'Don Quixote')
     author = Author.create(:last_name => 'De Cervantes', :first_name => 'Miguel', :book => book)
     Subject.create(:name => 'Fiction', :book => book)
@@ -74,7 +45,25 @@ class HomeLibraryManager < Sinatra::Base
     author = Author.create(:last_name => 'More', :first_name => 'Thomas', :book => book)
     Subject.create(:name => 'Philosophy', :book => book)
 
-    generate_response(true, [], "Stuff: #{author.errors.inspect}")
+    # Setup an instance of BookInformationManager
+    @manager = BookInformationManager.new
+  end
+
+  before do
+    content_type 'application/json'
+  end
+
+  # Show the index file
+  get '/' do
+    content_type :html
+    File.read('api.html')
+  end
+
+  # Run queries on current books in the library
+  get '/books' do
+    if params.empty?
+      generate_response(true, @manager.get_all_books, '')
+    end
   end
 
   # Add a book to the library

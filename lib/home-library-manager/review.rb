@@ -13,4 +13,8 @@ class Review
   property :first_name, String, :required => true
 
   belongs_to :book
+
+  def as_json(options = nil)
+    super({:only => [:review, :date, :last_name, :first_name]}.merge(options || {}))
+  end
 end

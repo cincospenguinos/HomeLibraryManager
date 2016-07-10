@@ -10,4 +10,8 @@ class Subject
   property :name, String, :required => true
 
   belongs_to :book
+
+  def as_json(options = nil)
+    super({:only => [:name]}.merge(options || {}))
+  end
 end

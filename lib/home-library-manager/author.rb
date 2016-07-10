@@ -11,4 +11,9 @@ class Author
   property :first_name, String, :required => true
 
   belongs_to :book
+
+  # Overrides as_json to ensure that we only return non-id information
+  def as_json(options = nil)
+    super({:only => [:last_name, :first_name]}.merge(options || {}))
+  end
 end

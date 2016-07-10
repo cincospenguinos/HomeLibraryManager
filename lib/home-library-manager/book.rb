@@ -13,4 +13,9 @@ class Book
   has n, :authors
   has n, :subjects
   has n, :reviews
+  has 1, :borrower
+
+  def as_json(options = nil)
+    super({:only => [:isbn, :title]}.merge(options || {}))
+  end
 end
