@@ -70,18 +70,22 @@ class HomeLibraryManager < Sinatra::Base
 
   # Add a book to the library
   post '/books' do
+    # TODO: User validation?
   end
 
   # Remove a book from the library
   delete '/books' do
+    # TODO: User validation?
   end
 
   # Let the service know a book is being checked out
   post '/checkout' do
+    # TODO: User validation?
   end
 
   # Let the service know a book is being checked in
   post '/checkin' do
+    # TODO: User validation?
   end
 
   # Submit a review on a book

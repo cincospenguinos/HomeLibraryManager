@@ -17,15 +17,33 @@ class BookInformationManager
       data = {}
       data[:book] = book
 
-      data[:authors] = Author.all(:book => book) # TODO: Figure out searching by author
-      options[:subject] ? data[:subjects] = Subject.all(:book => book, :subject => options[:subject]) : data[:subjects] = Subject.all(:book => book)
-
-      next if data[:authors].empty? || data[:subjects].empty?
+      # Check the authors
+      data[:authors] = Author.all(:book => book)
+      next unless verify_authors(data[:authors], options[:author_last], options[:author_first])
 
       all_books.push(data)
     end
 
     all_books
+  end
+
+private
+
+  # Helper method. Returns true if the authors array passed contains both author_last and author_first,
+  # or just one of them if only one of them was provided
+  def verify_authors(authors, author_last, author_first)
+    true unless author_last || author_first
+
+    authors.each do |author|
+      last_name = author_last && author.last_name == author_last || !author_last
+      first_name = author_first && author.first_name == author_first || !author_first
+
+      if last_name && first_name
+        return true
+      end
+    end
+
+    false
   end
 
 end
