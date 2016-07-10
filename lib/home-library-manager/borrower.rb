@@ -7,10 +7,11 @@ class Borrower
   include DataMapper::Resource
 
   property :id, Serial
+  property :isbn, String, :required => true
   property :last_name, String, :required => true
   property :first_name, String, :required => true
   property :phone_number, String
   property :email_address, String
-  
-  has n, :books
+  property :date_checked_out, DateTime
+  property :date_checked_in, DateTime
 end
