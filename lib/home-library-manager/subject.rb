@@ -7,11 +7,11 @@ class Subject
   include DataMapper::Resource
 
   property :id, Serial
-  property :name, String, :required => true
+  property :subject, String, :required => true
 
   belongs_to :book
 
   def as_json(options = nil)
-    super({:only => [:name]}.merge(options || {}))
+    super({:only => [:subject]}.merge(options || {}))
   end
 end

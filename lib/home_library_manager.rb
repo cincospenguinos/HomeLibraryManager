@@ -28,22 +28,22 @@ class HomeLibraryManager < Sinatra::Base
     book = Book.create(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
     author = Author.create(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
     author = Author.create(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
-    Subject.create(:name => 'Non-fiction', :book => book)
-    Subject.create(:name => 'Literary Theory', :book => book)
+    Subject.create(:subject => 'Non-Fiction', :book => book)
+    Subject.create(:subject => 'Literary Theory', :book => book)
 
     book = Book.create(:isbn => '978-0-679-73452-9', :title => 'Notes from Underground')
     author = Author.create(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
-    Subject.create(:name => 'Fiction', :book => book)
-    Subject.create(:name => 'Literature', :book => book)
+    Subject.create(:subject => 'Fiction', :book => book)
+    Subject.create(:subject => 'Literature', :book => book)
 
     book = Book.create(:isbn => '978-0-06-093434-7', :title => 'Don Quixote')
     author = Author.create(:last_name => 'De Cervantes', :first_name => 'Miguel', :book => book)
-    Subject.create(:name => 'Fiction', :book => book)
-    Subject.create(:name => 'Literature', :book => book)
+    Subject.create(:subject => 'Fiction', :book => book)
+    Subject.create(:subject => 'Literature', :book => book)
 
     book = Book.create(:isbn => '978-1-59308-244-4', :title => 'Utopia')
     author = Author.create(:last_name => 'More', :first_name => 'Thomas', :book => book)
-    Subject.create(:name => 'Philosophy', :book => book)
+    Subject.create(:subject => 'Philosophy', :book => book)
 
     # Setup an instance of BookInformationManager
     @manager = BookInformationManager.new
@@ -61,9 +61,11 @@ class HomeLibraryManager < Sinatra::Base
 
   # Run queries on current books in the library
   get '/books' do
-    if params.empty?
-      generate_response(true, @manager.get_all_books, '')
+    params.keys.each do |key|
+      params[(key.to_sym rescue key) || key] = params.delete(key)
     end
+
+    generate_response(true, @manager.get_all_books(params), "#{params}")
   end
 
   # Add a book to the library
