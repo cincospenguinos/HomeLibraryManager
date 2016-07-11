@@ -31,7 +31,7 @@ RSpec.describe HomeLibraryManager do
 
       response = JSON.parse(last_response.body)
 
-      expect(response['results'].count).to eq(4)
+      expect(response['results'].count).to eq(3)
     end
 
     it 'returns books written by a specific author when asked' do
@@ -58,9 +58,11 @@ RSpec.describe HomeLibraryManager do
     it 'returns all books that belong to all subjects provided when asked' do
       get '/books?subject[]=Fiction&subject[]=Literature'
 
-      response = JSON.parse(last_response.body)
+      result = JSON.parse(last_response.body)['results']
 
-      puts "#{response['message']}"
+      expect(result.count).to eq(1)
+      expect(result[0]['book']['title']).to eq('Notes from Underground')
+      expect(result[0]['authors'][0]['last_name']).to eq ('Dostoevsky')
     end
   end
 end
