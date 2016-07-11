@@ -104,5 +104,5 @@ private
     resp.to_json
   end
 
-  # run! if app_file == $0 # This is mostly for debugging
+  run! if app_file == $0 # This is mostly for debugging
 end

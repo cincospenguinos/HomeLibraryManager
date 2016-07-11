@@ -25,8 +25,12 @@ class BookInformationManager
       data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
       next unless data[:authors]
 
+      # Check the subjects
       data[:subjects] = get_all_subjects(options[:subject], book)
       next unless data[:subjects]
+
+      # Check if we are looking at books that are checked out or not
+      next unless verify_checked_out(options[:checked_out], book)
 
       all_books.push(data)
     end
@@ -98,5 +102,19 @@ private
     end
 
     subjects
+  end
+
+  # Helper method. Returns true if we are not looking for books that are checked out, or if
+  # the given book matches the checked out option (that is, the user wants all checked out
+  # books and the book provided is checked out)
+  def verify_checked_out(checked_out_option, book)
+    true unless checked_out_option
+
+    borrowers = Borrower.all(:book => book)
+
+    return false if borrowers.count < 1 && checked_out_option == 'true'
+    return false if borrowers.count >= 1 && checked_out_option == 'false'
+
+    true
   end
 end

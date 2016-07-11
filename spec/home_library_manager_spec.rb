@@ -21,6 +21,12 @@ RSpec.describe HomeLibraryManager do
       book = Book.create!(:isbn => '978-1-59308-244-4', :title => 'Utopia')
       author = Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
       Subject.create!(:subject => 'Philosophy', :book => book)
+
+      book = Book.create!(:isbn => '978-0-7434-7712-3', :title => 'Hamlet')
+      author = Author.create!(:last_name => 'Shakespeare', :first_name => 'William', :book => book)
+      Subject.create!(:subject => 'Fiction', :book => book)
+      Subject.create!(:subject => 'Theatre', :book => book)
+      Borrower.create!(:last_name => 'Doe', :first_name => 'John', :date_taken => DateTime.now, :book => book)
     end
 
     it 'returns all the books in the library when asked' do
@@ -28,7 +34,7 @@ RSpec.describe HomeLibraryManager do
 
       response = JSON.parse(last_response.body)
 
-      expect(response['results'].count).to eq(3)
+      expect(response['results'].count).to eq(4)
     end
 
     it 'returns books written by a specific author when asked' do
@@ -76,6 +82,22 @@ RSpec.describe HomeLibraryManager do
       result = JSON.parse(last_response.body)['results']
 
       expect(result.count).to eq(0)
+    end
+
+    it 'returns all books that are checked out when requested' do
+      get '/books?checked_out=true'
+
+      result = JSON.parse(last_response.body)['results']
+      expect(result.count).to eq(1)
+      expect(result[0]['book']['title']).to eq('Hamlet')
+      expect(result[0]['authors'][0]['last_name']).to eq ('Shakespeare')
+    end
+
+    it 'returns all books that are checked in when requested' do
+      get '/books?checked_out=false'
+
+      result = JSON.parse(last_response.body)['results']
+      expect(result.count).to eq(3)
     end
   end
 end
