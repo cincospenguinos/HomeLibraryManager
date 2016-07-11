@@ -56,9 +56,11 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns all books that belong to all subjects provided when asked' do
-      get '/books?subject=Fiction&subject=Literature'
+      get '/books?subject[]=Fiction&subject[]=Literature'
 
-      results = JSON.parse(last_response.body)['results']
+      response = JSON.parse(last_response.body)
+
+      puts "#{response['message']}"
     end
   end
 end

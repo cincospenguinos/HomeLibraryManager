@@ -22,7 +22,7 @@ class BookInformationManager
       next unless verify_authors(data[:authors], options[:author_last], options[:author_first])
 
       data[:subjects] = Subject.all(:book => book)
-      # TODO: Figure out subjects
+
 
       all_books.push(data)
     end
@@ -34,7 +34,7 @@ private
 
   # Helper method. Returns true if the authors array passed contains both author_last and author_first,
   # or just one of them if only one of them was provided
-  def verify_authors(authors, author_last, author_first)
+  def verify_authors(authors, author_last, author_first) # TODO: Multiple authors?
     true unless author_last || author_first
 
     authors.each do |author|
