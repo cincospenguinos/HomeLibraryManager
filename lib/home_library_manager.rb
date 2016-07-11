@@ -72,6 +72,13 @@ class HomeLibraryManager < Sinatra::Base
   # Add a book to the library
   post '/books' do
     # TODO: User validation?
+    message = @manager.add_book(params[:isbn], params[:title], params[:author_last], params[:author_first], params[:subject])
+
+    if message.is_a?(String)
+      generate_response(false, [], message)
+    else
+      generate_response(true, [], '')
+    end
   end
 
   # Remove a book from the library

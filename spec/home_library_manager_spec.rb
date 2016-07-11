@@ -100,4 +100,36 @@ RSpec.describe HomeLibraryManager do
       expect(result.count).to eq(3)
     end
   end
+
+  context 'when adding books to the library' do
+    it 'adds a book when the proper information is provided' do
+      post '/books?title=The Sun Also Rises&isbn=978-0-7432-9733-2&author_last=Hemingway&author_first=Ernest'
+
+      puts "#{JSON.parse(last_response.body)}"
+
+      get '/books?title=The Sun Also Rises'
+
+      results = JSON.parse(last_response.body)['results']
+      expect(results.count).to eq(1)
+      expect(results[0]['book']['title']).to eq('The Sun Also Rises')
+      expect(results[0]['authors'][0]['last_name']).to eq('Hemingway')
+    end
+
+    it 'adds a book with a given subject when the proper information is provided' do
+      post '/books?title=Notes from Underground&isbn=978-0-679-73452-9&author_last=Dostoevsky&author_first=Fyodor&subject=Fiction'
+      get '/books?author_last=Dostoevsky'
+
+      results = JSON.parse(last_response.body)['results']
+      expect(results.count).to eq(1)
+      expect(results[0]['book']['title']).to eq('Notes from Underground')
+      expect(results[0]['authors'][0]['last_name']).to eq('Dostoevsky')
+    end
+
+    it 'returns a message when there is not enough information to add a book' do
+      post '/books?title=herp&author_last=derp'
+
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to eq('false') # TODO: Fix this
+    end
+  end
 end

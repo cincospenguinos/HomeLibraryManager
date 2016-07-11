@@ -38,7 +38,26 @@ class BookInformationManager
     all_books
   end
 
-private
+  # Returns a string message if the given information is invalid, or true if the book was added correctly.
+  def add_book(isbn, title, author_last, author_first, subjects)
+    'All pieces of information (isbn, title, last name, first name) must be provided' unless isbn && title && author_last && author_first
+
+    # TODO: ISBN validation
+    book = Book.create!(:title => title, :isbn => isbn)
+    Author.create!(:last_name => author_last, :first_name => author_first, :book => book)
+
+    if subjects
+      subjects = [ subjects ] unless subjects.is_a?(Array)
+
+      subjects.each do |subject|
+        Subject.create!(:subject => subject, :book => book)
+      end
+    end
+
+    true
+  end
+
+  private
 
   # Helper method. Returns all the authors associated with a given book, or false if
   # the book doesn't have all of the expected last or first names provided.
@@ -116,5 +135,10 @@ private
     return false if borrowers.count >= 1 && checked_out_option == 'false'
 
     true
+  end
+
+  # Helper method. Returns true if the isbn number provided is a valid one
+  def verify_isbn(isbn)
+    # TODO: This
   end
 end
