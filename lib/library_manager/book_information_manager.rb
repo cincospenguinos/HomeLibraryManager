@@ -13,17 +13,17 @@ class BookInformationManager
   def get_all_books(options = {})
     all_books = []
 
-    # Ensure that we have the proper options setup for the searches we are doing
     options[:subject] = [ options[:subject] ] if options[:subject] && !options[:subject].is_a?(Array)
+    options[:author_last] = [ options[:author_last] ] if options[:author_last] && !options[:author_last].is_a?(Array)
+    options[:author_first] = [ options[:author_first] ] if options[:author_first] && !options[:author_first].is_a?(Array)
 
     Book.all.each do |book|
       data = {}
       data[:book] = book
 
       # Check the authors
-      data[:authors] = Author.all(:book => book)
-      # next unless verify_authors(data[:authors], options[:author_last], options[:author_first])
-
+      data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
+      next unless data[:authors]
 
       data[:subjects] = get_all_subjects(options[:subject], book)
       next unless data[:subjects]
@@ -36,19 +36,44 @@ class BookInformationManager
 
 private
 
-  # Helper method. Returns true if the authors array passed contains both author_last and author_first,
-  # or just one of them if only one of them was provided
-  def verify_authors(authors, author_last, author_first) # TODO: Multiple authors?
-    true unless author_last || author_first
+  # Helper method. Returns all the authors associated with a given book, or false if
+  # the book doesn't have all of the expected last or first names provided.
+  def get_all_authors(expect_auth_last, expect_auth_first, book)
+    authors = Author.all(:book => book)
 
-    authors.each do |author|
-      last_name = author_last && author.last_name == author_last || !author_last
-      first_name = author_first && author.first_name == author_first || !author_first
+    if expect_auth_last
+      verify_last = {}
 
-      return true if last_name && first_name
+      expect_auth_last.each do |auth|
+        verify_last[auth] = false
+      end
+
+      authors.each do |auth|
+        verify_last[auth.last_name] = true
+      end
+
+      verify_last.each_value do |val|
+        return false unless val
+      end
     end
 
-    false
+    if expect_auth_first
+      verify_first = {}
+
+      expect_auth_first.each do |auth|
+        verify_first[auth] = false
+      end
+
+      authors.each do |auth|
+        verify_first[auth.first_name] = true
+      end
+
+      verify_first.each_value do |val|
+        return false unless val
+      end
+    end
+
+    authors
   end
 
   # Helper method. Returns all the subjects associated with a given book, or false
@@ -74,25 +99,4 @@ private
 
     subjects
   end
-
-  # Helper method. Returns true if the expected subjects are all included in the subject array provided
-  def verify_subjects(subjects, expected_subjects)
-    true unless expected_subjects && !expected_subjects.empty?
-    verified_subjects = {}
-
-    expected_subjects.each do |sub|
-      verified_subjects[sub] = false
-    end
-
-    subjects.each do |sub|
-      verified_subjects[sub.subject] = true
-    end
-
-    verified_subjects.each do |sub, verify|
-      return false unless verify
-    end
-
-    true
-  end
-
 end

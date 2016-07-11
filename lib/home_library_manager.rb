@@ -62,7 +62,6 @@ class HomeLibraryManager < Sinatra::Base
 
   # Run queries on current books in the library
   get '/books' do
-    # TODO: Multiple params of the same name (i.e. params[:subject] => ['Philosophy', 'Fiction'])
     params.keys.each do |key|
       params[(key.to_sym rescue key) || key] = params.delete(key)
     end
@@ -96,6 +95,7 @@ class HomeLibraryManager < Sinatra::Base
 
 private
 
+  # Helper method. Generates a response in JSON and returns it.
   def generate_response(successful, results, message)
     resp = {}
     resp['successful'] = successful
@@ -104,5 +104,5 @@ private
     resp.to_json
   end
 
-  run! if app_file == $0 # This is mostly for debugging
+  # run! if app_file == $0 # This is mostly for debugging
 end
