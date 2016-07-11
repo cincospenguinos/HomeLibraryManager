@@ -5,25 +5,22 @@ RSpec.describe HomeLibraryManager do
   context 'when searching for books in the library' do
 
     before(:all) do
-      unless @setup
-        get '/'
+      get '/' # This just starts up the DB stuff so that we can add stuff to the DB
 
-        book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
-        author = Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
-        author = Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
-        Subject.create!(:subject => 'Non-Fiction', :book => book)
-        Subject.create!(:subject => 'Literary Theory', :book => book)
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      author = Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      author = Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+      Subject.create!(:subject => 'Literary Theory', :book => book)
 
-        book = Book.create!(:isbn => '978-0-679-73452-9', :title => 'Notes from Underground')
-        author = Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
-        Subject.create!(:subject => 'Fiction', :book => book)
-        Subject.create!(:subject => 'Literature', :book => book)
+      book = Book.create!(:isbn => '978-0-679-73452-9', :title => 'Notes from Underground')
+      author = Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
+      Subject.create!(:subject => 'Fiction', :book => book)
+      Subject.create!(:subject => 'Literature', :book => book)
 
-        book = Book.create!(:isbn => '978-1-59308-244-4', :title => 'Utopia')
-        author = Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
-        Subject.create!(:subject => 'Philosophy', :book => book)
-        @setup = true
-      end
+      book = Book.create!(:isbn => '978-1-59308-244-4', :title => 'Utopia')
+      author = Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
+      Subject.create!(:subject => 'Philosophy', :book => book)
     end
 
     it 'returns all the books in the library when asked' do
@@ -49,8 +46,6 @@ RSpec.describe HomeLibraryManager do
 
       results = JSON.parse(last_response.body)['results']
 
-      puts "#{results}"
-
       expect(results.count).to eq(1)
       expect(results[0]['subjects'].include?({'subject' => 'Philosophy'})).to be true
     end
@@ -63,6 +58,24 @@ RSpec.describe HomeLibraryManager do
       expect(result.count).to eq(1)
       expect(result[0]['book']['title']).to eq('Notes from Underground')
       expect(result[0]['authors'][0]['last_name']).to eq ('Dostoevsky')
+    end
+
+    it 'returns all books that belong to all subjects provided and have the last name provided' do
+      get '/books?subject[]=Fiction&subject[]=Literature&author_last=Dostoevsky'
+
+      result = JSON.parse(last_response.body)['results']
+
+      expect(result.count).to eq(1)
+      expect(result[0]['book']['title']).to eq('Notes from Underground')
+      expect(result[0]['authors'][0]['last_name']).to eq ('Dostoevsky')
+    end
+
+    it 'returns no books when the provided parameters do not match any books' do
+      get '/books?author_first=FOOBAR'
+
+      result = JSON.parse(last_response.body)['results']
+
+      expect(result.count).to eq(0)
     end
   end
 end
