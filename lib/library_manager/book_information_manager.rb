@@ -8,6 +8,7 @@ require 'data_mapper'
 class BookInformationManager
 
   # Returns all of the books in the DB along with their various pieces of information
+  # TODO: There must be a better way to do all of this. Like using the options {} hash when calling Book.all
   def get_all_books(options = {})
     all_books = []
 
@@ -19,7 +20,7 @@ class BookInformationManager
       data = {}
       data[:book] = book
 
-      next if options[:title] && book.title != options[:title] # TODO: Is there a better way to do all of this?
+      next if options[:title] && book.title != options[:title]
 
       data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
       next unless data[:authors]
@@ -43,8 +44,6 @@ class BookInformationManager
     book = Book.create!(:title => title, :isbn => isbn)
 
     authors = Hash[author_last.zip(author_first.map { |last| last.include?(',') ? (last.split /, /) : last })]
-    puts "AUTHORS! #{authors}"
-
     authors.each do |last_name, first_name|
       Author.create!(:last_name => last_name, :first_name => first_name, :book => book)
     end
