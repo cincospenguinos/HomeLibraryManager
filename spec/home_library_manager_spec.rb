@@ -312,6 +312,7 @@ RSpec.describe HomeLibraryManager do
       Borrower.create!(:last_name => 'Roch', :first_name => 'Mike', :date_taken => DateTime.now, :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
       Subject.create!(:subject => 'Literary Studies', :book => book)
+      Review.create!(:first_name => 'Joe', :last_name => 'Doug', :review => 'This book was good.', :date => DateTime.now, :book => book)
 
       delete '/books?isbn=978-0-671-21209-4'
       response = JSON.parse(last_response.body)
@@ -404,5 +405,17 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(0)
     end
+  end
+
+  context 'when browsing who has books checked out from the library' do
+    # TODO: Test cases for this
+  end
+
+  context 'when browsing reviews for various books' do
+    # TODO: Test cases for this
+  end
+
+  context 'when submitting a review for a book' do
+    # TODO: Test cases for this
   end
 end

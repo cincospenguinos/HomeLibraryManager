@@ -47,14 +47,22 @@ class HomeLibraryManager < Sinatra::Base
 
   # Run queries on current books in the library
   get '/books' do
-    params.keys.each do |key|
-      params[(key.to_sym rescue key) || key] = params.delete(key)
-    end
+    options = params
+    params = get_books_valid_params(options)
 
-    if params[:checked_out] && (params[:checked_out] != 'true' && params[:checked_out] != 'false')
-      generate_response(false, [], 'Parameter checked_out must be either true or false')
+    # puts "PARAMS: #{params}"
+    # puts "OPTIONS: #{options}"
+
+    if !params
+      generate_response(true, @manager.get_all_books({}), '')
+    elsif params.is_a?(String)
+      generate_response(false, [], params)
     else
-      generate_response(true, @manager.get_all_books(params), '')
+      if !params[:match] || params[:match] == 'any'
+        generate_response(true, @manager.get_all_books(params), '')
+      else
+        generate_response(true, @manager.get_any_books(params), '')
+      end
     end
   end
 
@@ -146,12 +154,19 @@ class HomeLibraryManager < Sinatra::Base
     end
   end
 
-  # Submit a review on a book
-  post '/review' do
+  # Browse reviews on books
+  get '/reviews' do
     # TODO: Just this thing and we're pretty much done with the service (for now)
   end
 
+  # Submit a review on a book
+  post '/reviews' do
+    # TODO: And this thing too
+  end
+
 private
+
+  MATCH_OPTIONS = [:any, :all, :author_last, :author_first, :subject]
 
   # Helper method. Generates a response in JSON and returns it.
   def generate_response(successful, results, message)
@@ -160,6 +175,31 @@ private
     resp['results'] = results
     resp['message'] = message
     resp.to_json
+  end
+
+  # Helper method. Checks the params provided to ensure they comply with the service. If they do not, returns
+  # a string. If they do, returns a restructured version of params to better interact with the BookInformationManager
+  def get_books_valid_params(params)
+    return params unless params
+    return 'checked_out may only be true or false' if params[:checked_out] && !(params[:checked_out] == 'true' || params[:checked_out] == 'false')
+
+    # TODO: Set this out into its own method. We will need to do all of this stuff for every request anyway
+    params[:subject] = [ params[:subject] ] if params[:subject] && params[:subject].is_a?(String)
+    params[:author_last] = [ params[:author_last] ] if params[:author_last] && params[:author_last].is_a?(String)
+    params[:author_first] = [ params[:author_first] ] if params[:author_first] && params[:author_first].is_a?(String)
+    params[:match] = [ params[:match] ] if params[:match] && params[:match].is_a?(String)
+
+    if params[:match]
+      params[:match].keys.each do |key|
+        params[:match][(key.to_sym rescue key) || key] = params.delete(key)
+      end
+
+      params[:match].each do |match_type|
+        return 'The provided parameter for "match" is not a supported option.' unless MATCH_OPTIONS.include?(match_type)
+      end
+    end
+
+    params
   end
 
   # Helper method. Returns string explaining why the params provided are invalid or true if they are valid.
