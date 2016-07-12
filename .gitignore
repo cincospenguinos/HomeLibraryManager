@@ -51,3 +51,4 @@ build-iPhoneSimulator/
 *.yml
 .idea
 .rbenv-gemsets
+*.html

@@ -32,6 +32,24 @@ task :setup do
     puts 'Please edit the library_config.yml file with your information before attempting to run the service.'
     exit 1
   end
+
+  unless File.exists?('index.html')
+    File.open('index.html', 'w') do |f|
+      f.write("
+        <!DOCTYPE HTML>
+        <html>
+          <head>
+            <title>Modify this page!</title>
+          </head>
+          <body>
+            <h1>Modify this page!</h1>
+            <p>Modify this page however you'd like! It gets loaded by default on a GET request at '/' for this service</p>
+          </body>
+        </html>
+              ")
+      f.flush
+    end
+  end
 end
 
 task :default => [:setup, :test]

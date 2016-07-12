@@ -42,7 +42,7 @@ class HomeLibraryManager < Sinatra::Base
   # Show the index file
   get '/' do
     content_type :html
-    File.read('api.html')
+    File.read('index.html')
   end
 
   # Run queries on current books in the library
