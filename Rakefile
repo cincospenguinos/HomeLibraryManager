@@ -52,4 +52,22 @@ task :setup do
   end
 end
 
+task :setup_travis do
+  File.open('library_config.yml', 'w') do
+    f.write(
+'---
+:database:
+  :db_user: librarymanager
+  :db_password: password
+  :db_hostname: localhost
+  :db_name: HomeLibrary
+  :db_engine: mysql
+:data_mapper:
+  :logger_std_out: true
+  :raise_on_save_failure: true
+')
+    f.flush
+  end
+end
+
 task :default => [:setup, :test]
