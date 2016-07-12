@@ -148,6 +148,7 @@ class HomeLibraryManager < Sinatra::Base
 
   # Submit a review on a book
   post '/review' do
+    # TODO: Just this thing and we're pretty much done with the service (for now)
   end
 
 private

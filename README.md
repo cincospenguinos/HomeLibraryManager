@@ -3,8 +3,9 @@
 [![Build Status](https://travis-ci.org/cincospenguinos/HomeLibraryManager.svg?branch=master)](https://travis-ci.org/cincospenguinos/HomeLibraryManager)
 [![Coverage Status](https://coveralls.io/repos/github/cincospenguinos/HomeLibraryManager/badge.svg?branch=master)](https://coveralls.io/github/cincospenguinos/HomeLibraryManager?branch=master)
 
-This is a simple Ruby service that helps manage a home library. It is intended to be simple, low maintenance, and
-easy to deploy and use.
+This is a simple Sinatra service that helps manage a home library (as in the kind that holds books.) 
+It is intended to be simple, low maintenance, and easy to deploy and use. It is also intended to be able
+to run alongside any number of other Sinatra services (hence it is built in the [Modular Sinatra fashion.](http://www.sinatrarb.com/intro.html#Modular%20vs.%20Classic%20Style))
 
 ## How do I use it?
 

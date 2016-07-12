@@ -132,6 +132,13 @@ RSpec.describe HomeLibraryManager do
       expect(results.count).to eq(1)
       expect(results[0]['book']['isbn']).to eq('978-0-7434-7712-3')
     end
+
+    it 'informs me when I give it an incorrect value for checked_out' do
+      get '/books?checked_out=foo'
+      response = JSON.parse(last_response.body)
+
+      expect(response['successful']).to be_falsey
+    end
   end
 
   context 'when adding books to the library' do
@@ -376,5 +383,26 @@ RSpec.describe HomeLibraryManager do
 
   context 'when checking in a book from the library' do
 
+    before(:all) do
+      book = Book.create!(:isbn => '978-0-7432-9733-2', :title => 'The Sun Also Rises')
+      Author.create!(:last_name => 'Hemingway', :first_name => 'Ernest', :book => book)
+      Borrower.create!(:last_name => 'Herb', :first_name => 'Derb', :date_taken => DateTime.now, :book => book)
+    end
+
+    it 'informs me when I give it an incorrect value for some parameter' do
+      post '/checkin?last_name=Herb&first_name=Derb'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
+    end
+
+    it 'lets me checkin a book given the correct information' do
+      post '/checkin?last_name=Herb&first_name=Derb&isbn=978-0-7432-9733-2'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?checked_out=true'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.count).to eq(0)
+    end
   end
 end
