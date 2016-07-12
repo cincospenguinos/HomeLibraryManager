@@ -45,7 +45,7 @@ so on.
 
 ```
 GET '/books?author_last=Plato&subject[]=Philosophy&subject[]=Fiction' => returns all fictional philosophical works of Plato
-GET '/books?author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles => returns all works by authors Mortimer Adler and Charles Van Doren
+GET '/books?author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles' => returns all works by authors Mortimer Adler and Charles Van Doren
 GET '/books?author_last=Shakespeare&subject[]=Theater&subject[]=Fiction => returns the theatrical and fictional works of Shakespeare
 ```
 ### POST '/books'
