@@ -44,29 +44,40 @@ class BookInformationManager
   def add_book(isbn, title, author_last, author_first, subjects)
     return 'All pieces of information (isbn, title, last name, first name) must be provided' unless isbn && title && author_last && author_first
 
-    # TODO: ISBN validation
-    book = Book.create(:title => title, :isbn => isbn)
-    author = Author.create(:last_name => author_last, :first_name => author_first, :book => book)
+    # TODO: ISBN validation?
+    book = Book.create!(:title => title, :isbn => isbn)
 
-    book.errors.each do |error|
-      puts "BOOK ERROR #{error}"
-    end
+    authors = Hash[author_last.zip(author_first.map { |last| last.include?(',') ? (last.split /, /) : last })]
+    puts "AUTHORS! #{authors}"
 
-    author.errors.each do |error|
-      puts "AUTHOR ERROR #{error}"
+    authors.each do |last_name, first_name|
+      Author.create!(:last_name => last_name, :first_name => first_name, :book => book)
     end
 
     if subjects
       subjects = [ subjects ] unless subjects.is_a?(Array)
 
       subjects.each do |subject|
-        sub = Subject.create(:subject => subject, :book => book)
-
-        sub.errors.each do |error|
-          puts "SUBJECT ERROR #{error}"
-        end
+        sub = Subject.create!(:subject => subject, :book => book)
       end
     end
+
+    true
+  end
+
+  # Deletes the book matching the ISBN number provided. Returns true if the book was deleted or
+  # a string if the book was not deleted. TODO: Delete more than one?
+  def delete_book(isbn)
+    return 'An ISBN number must be provided' unless isbn
+
+    book = Book.first(:isbn => isbn)
+    return 'No book was found with that isbn' unless book
+
+    Author.all(:book => book).destroy!
+    Review.all(:book => book).destroy!
+    Subject.all(:book => book).destroy!
+    Borrower.all(:book => book).destroy!
+    book.destroy!
 
     true
   end

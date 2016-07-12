@@ -38,6 +38,7 @@ RSpec.describe HomeLibraryManager do
         Book.all.destroy!
       rescue Error => e
         puts "#{e}"
+        exit 1
       end
     end
 
@@ -123,6 +124,20 @@ RSpec.describe HomeLibraryManager do
   end
 
   context 'when adding books to the library' do
+
+    after(:each) do
+      begin
+        Author.all.destroy!
+        Subject.all.destroy!
+        Borrower.all.destroy!
+        Review.all.destroy!
+        Book.all.destroy!
+      rescue Error => e
+        puts "#{e}"
+        exit 1
+      end
+    end
+
     it 'adds a book when the proper information is provided' do
       post '/books?title=The Sun Also Rises&isbn=978-0-7432-9733-2&author_last=Hemingway&author_first=Ernest'
 
@@ -168,6 +183,125 @@ RSpec.describe HomeLibraryManager do
 
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
+    end
+
+    it 'adds a book with multiple authors are given' do
+      post '/books?isbn=978-0-671-21209-4&title=How to Read a Book&author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.count).to eq(1)
+      expect(results[0]['book']['title']).to eq('How to Read a Book')
+      expect(results[0]['authors'].count).to eq(2)
+    end
+  end
+
+  context 'when deleting books from the library' do
+    it 'deletes a book when given an isbn number' do
+      post '/books?isbn=978-0-671-21209-4&title=How to Read a Book&author_last=Adler&author_first=Mortimer'
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(1)
+
+      delete '/books?isbn=978-0-671-21209-4'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(0)
+    end
+
+    it 'deletes a book with its author when given an isbn number' do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+
+      delete '/books?isbn=978-0-671-21209-4'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(0)
+    end
+
+    it 'deletes a book with all of its authors when it has multiple authors' do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+
+      delete '/books?isbn=978-0-671-21209-4'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(0)
+    end
+
+    it 'deletes a book with a subject on it' do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+
+      delete '/books?isbn=978-0-671-21209-4'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(0)
+    end
+
+    it 'deletes a book with more than one subject on it' do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+      Subject.create!(:subject => 'Literary Studies', :book => book)
+
+      delete '/books?isbn=978-0-671-21209-4'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(0)
+    end
+
+    it 'deletes a book even if it is checked out' do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Borrower.create!(:last_name => 'Roch', :first_name => 'Mike', :date_taken => DateTime.now, :book => book)
+
+      delete '/books?isbn=978-0-671-21209-4'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(0)
+    end
+
+    it 'deletes a book with a whole lot of information on it' do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Borrower.create!(:last_name => 'Roch', :first_name => 'Mike', :date_taken => DateTime.now, :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+      Subject.create!(:subject => 'Literary Studies', :book => book)
+
+      delete '/books?isbn=978-0-671-21209-4'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?title=How to Read a Book'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(0)
     end
   end
 end

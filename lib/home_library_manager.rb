@@ -67,18 +67,28 @@ class HomeLibraryManager < Sinatra::Base
       params[(key.to_sym rescue key) || key] = params.delete(key)
     end
 
-    generate_response(true, @manager.get_all_books(params), "#{params}")
+    generate_response(true, @manager.get_all_books(params), '')
   end
 
   # Add a book to the library
   post '/books' do
     # TODO: User validation?
+    params.keys.each do |key|
+      params[(key.to_sym rescue key) || key] = params.delete(key)
+    end
+
+    params[:author_last] = [params[:author_last]] if params[:author_last].is_a?(String)
+    params[:author_first] = [params[:author_first]] if params[:author_first].is_a?(String)
+    
+    message = new_book_valid_params(params)
+    
+    generate_response(false, [], message) if message.is_a?(String)
+    
     begin
       message = @manager.add_book(params[:isbn], params[:title], params[:author_last], params[:author_first], params[:subject])
     rescue DataMapper::SaveFailureError
-      message = 'There was an error while saving (are you sure you provided the proper parameters?'
+      message = 'There was an error while saving (are you sure you provided the proper parameters?)'
     end
-
 
     if message.is_a?(String)
       generate_response(false, [], message)
@@ -90,6 +100,18 @@ class HomeLibraryManager < Sinatra::Base
   # Remove a book from the library
   delete '/books' do
     # TODO: User validation?
+    begin
+      message = @manager.delete_book(params[:isbn])
+    rescue DataMapper::ImmutableDeletedError => e
+      puts "#{e}"
+      message = 'There was an error while deleting - check log files for more information'
+    end
+
+    if message.is_a?(String)
+      generate_response(false, [], message)
+    else
+      generate_response(true, [], '')
+    end
   end
 
   # Let the service know a book is being checked out
@@ -115,6 +137,13 @@ private
     resp['results'] = results
     resp['message'] = message
     resp.to_json
+  end
+
+  # Helper method. Returns string explaining why the params provided are invalid or true if they are valid.
+  def new_book_valid_params(params)
+    return 'There is a piece of information missing' unless params[:isbn] && params[:title] && params[:author_first] && params[:author_last]
+    return 'There are mismatched author names' if params[:author_last].size != params[:author_first].size
+    true
   end
 
   run! if app_file == $0 # This is mostly for debugging
