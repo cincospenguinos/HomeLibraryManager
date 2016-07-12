@@ -1,6 +1,8 @@
 require 'rack/test'
 require 'rspec'
 require 'data_mapper'
+require 'coveralls'
+Coveralls.wear!
 
 ENV['RACK_ENV'] = 'test'
 

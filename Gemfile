@@ -7,3 +7,4 @@ gem 'data_mapper' # ORM
 gem 'rack-test'
 
 gem 'dm-mysql-adapter' # If you're using MySQL
+gem 'coveralls', require: false

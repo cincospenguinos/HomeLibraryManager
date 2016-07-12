@@ -1,5 +1,8 @@
 # HomeLibraryManager
 
+[![Build Status](https://travis-ci.org/cincospenguinos/HomeLibraryManager.svg?branch=master)](https://travis-ci.org/cincospenguinos/HomeLibraryManager)
+[![Coverage Status](https://coveralls.io/repos/github/cincospenguinos/HomeLibraryManager/badge.svg?branch=master)](https://coveralls.io/github/cincospenguinos/HomeLibraryManager?branch=master)
+
 This is a simple Ruby service that helps manage a home library. It is intended to be simple, low maintenance, and
 easy to deploy and use.
 
