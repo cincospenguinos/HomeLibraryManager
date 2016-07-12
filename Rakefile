@@ -10,23 +10,6 @@ end
 task :test => :spec
 
 task :setup do
-  # This is just here for the travis-ci stuff to work
-  File.open('library_config.yml', 'w') do |f|
-    f.write('
----
-:database:
-  :db_user: travis
-  :db_password: ''
-  :db_hostname: localhost
-  :db_name: HomeLibraryManager_test
-  :db_engine: mysql
-:data_mapper:
-  :logger_std_out: true
-  :rase_on_save_failure: true
-')
-    f.flush
-  end
-
   unless File.exists?('library_config.yml')
     data = {}
 

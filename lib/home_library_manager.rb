@@ -28,7 +28,7 @@ class HomeLibraryManager < Sinatra::Base
       DataMapper::Logger.new($stdout, :debug) # for debugging
     end
 
-    DataMapper::Model.raise_on_save_failure = data_mapper_config[:rase_on_save_failure]
+    DataMapper::Model.raise_on_save_failure = data_mapper_config[:raise_on_save_failure]
     DataMapper.finalize
     DataMapper.auto_migrate!
 

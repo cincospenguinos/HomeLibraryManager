@@ -6,3 +6,13 @@ cache: bundler
 services: mysql
 before_install:
   - mysql -e "CREATE DATABASE IF NOT EXISTS HomeLibraryManager_test;"
+  - echo "---" > library_config.yml
+  - echo ":database:" >> library_config.yml
+  - echo "  :db_user: travis" >> library_config.yml
+  - echo "  :db_password: " >> library_config.yml
+  - echo "  :db_hostname: localhost" >> library_config.yml
+  - echo "  :db_name: HomeLibraryManager_test" >> library_config.yml
+  - echo "  :db_engine: mysql" >> library_config.yml
+  - echo ":data_mapper:" >> library_config.yml
+  - echo "  :logger_std_out: true" >> library_config.yml
+  - echo "  :raise_on_save_failure: true" >> library_config.yml
