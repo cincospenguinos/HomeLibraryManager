@@ -1,5 +1,6 @@
 require 'rack/test'
 require 'rspec'
+require 'data_mapper'
 
 ENV['RACK_ENV'] = 'test'
 

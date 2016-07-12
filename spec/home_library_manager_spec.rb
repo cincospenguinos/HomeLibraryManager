@@ -5,7 +5,7 @@ RSpec.describe HomeLibraryManager do
   context 'when searching for books in the library' do
 
     before(:all) do
-      get '/' # This just starts up the DB stuff so that we can add stuff to the DB
+      get '/'
 
       book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
       author = Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)

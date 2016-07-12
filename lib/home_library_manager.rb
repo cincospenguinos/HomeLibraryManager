@@ -18,36 +18,20 @@ class HomeLibraryManager < Sinatra::Base
 
   def initialize
     super
-    config = YAML.load(File.open('config.yml'))
-    DataMapper::Logger.new($stdout, :debug) # for debugging
-    DataMapper.setup(:default, "#{config['dbengine']}://#{config['user']}:#{config['pass']}@#{config['host']}/#{config['database']}")
-    DataMapper::Model.raise_on_save_failure = true
+    config = YAML.load(File.read('library_config.yml'))
+    db_config = config[:database]
+    data_mapper_config = config[:data_mapper]
+
+    DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
+
+    if data_mapper_config[:logger_std_out]
+      DataMapper::Logger.new($stdout, :debug) # for debugging
+    end
+
+    DataMapper::Model.raise_on_save_failure = data_mapper_config[:rase_on_save_failure]
     DataMapper.finalize
     DataMapper.auto_migrate!
 
-    # # This exists solely for setting up development stuff
-    # book = Book.create(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
-    # author = Author.create(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
-    # author = Author.create(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
-    # Subject.create(:subject => 'Non-Fiction', :book => book)
-    # Subject.create(:subject => 'Literary Theory', :book => book)
-    #
-    # book = Book.create(:isbn => '978-0-679-73452-9', :title => 'Notes from Underground')
-    # author = Author.create(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
-    # Subject.create(:subject => 'Fiction', :book => book)
-    # Subject.create(:subject => 'Literature', :book => book)
-    # Subject.create(:subject => 'Philosophy', :book => book)
-    #
-    # book = Book.create(:isbn => '978-0-06-093434-7', :title => 'Don Quixote')
-    # author = Author.create(:last_name => 'De Cervantes', :first_name => 'Miguel', :book => book)
-    # Subject.create(:subject => 'Fiction', :book => book)
-    # Subject.create(:subject => 'Literature', :book => book)
-    #
-    # book = Book.create(:isbn => '978-1-59308-244-4', :title => 'Utopia')
-    # author = Author.create(:last_name => 'More', :first_name => 'Thomas', :book => book)
-    # Subject.create(:subject => 'Philosophy', :book => book)
-
-    # Setup an instance of BookInformationManager
     @manager = BookInformationManager.new
   end
 
