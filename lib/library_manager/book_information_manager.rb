@@ -193,23 +193,26 @@ class BookInformationManager
   # books and the book provided is checked out)
   def verify_checked_out(checked_out_option, book)
     return true unless checked_out_option
+
+    want_checked_out = nil
+
     if checked_out_option == 'true'
-      checked_out_option = true
+      want_checked_out = true
     elsif checked_out_option == 'false'
-      checked_out_option = false
+      want_checked_out = false
     else
       raise RuntimeError, 'You dun goof\'d pretty hard there bro.'
     end
 
     borrower = Borrower.last(:book => book)
-    return true if !checked_out_option && !borrower
-    return false if checked_out_option && !borrower
+    return true if !want_checked_out && !borrower
+    return false if want_checked_out && !borrower
 
-    is_checked_out = borrower.attribute_get(:date_returned) != nil
+    is_checked_out = borrower.attribute_get(:date_returned) == nil
 
-    return false if checked_out_option && !is_checked_out
-    return false if !checked_out_option && is_checked_out
+    return true if want_checked_out && is_checked_out
+    return true if !want_checked_out && !is_checked_out
 
-    true
+    false
   end
 end

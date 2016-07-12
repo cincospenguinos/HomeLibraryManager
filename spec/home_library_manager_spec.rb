@@ -114,7 +114,7 @@ RSpec.describe HomeLibraryManager do
       result = JSON.parse(last_response.body)['results']
       expect(result.count).to eq(1)
       expect(result[0]['book']['title']).to eq('Hamlet')
-      expect(result[0]['authors'][0]['last_name']).to eq ('Shakespeare')
+      expect(result[0]['authors'][0]['last_name']).to eq('Shakespeare')
     end
 
     it 'returns all books that are checked in when requested' do

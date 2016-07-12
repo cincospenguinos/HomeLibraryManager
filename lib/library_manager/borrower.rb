@@ -16,7 +16,7 @@ class Borrower
 
   belongs_to :book
 
-  def as_json
+  def as_json(options = nil)
     super({:only => [:last_name, :first_name, :date_taken, :date_returned, :phone_number, :email_address]}.merge(options || {}))
   end
 end

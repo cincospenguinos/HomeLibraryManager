@@ -51,8 +51,8 @@ class HomeLibraryManager < Sinatra::Base
       params[(key.to_sym rescue key) || key] = params.delete(key)
     end
 
-    if params[:checked_out] && (params[:checked_out] != 'true' || params[:checked_out] != 'false')
-      generate_response(false, [], 'checked_out must be either true or false')
+    if params[:checked_out] && (params[:checked_out] != 'true' && params[:checked_out] != 'false')
+      generate_response(false, [], 'Parameter checked_out must be either true or false')
     else
       generate_response(true, @manager.get_all_books(params), '')
     end
