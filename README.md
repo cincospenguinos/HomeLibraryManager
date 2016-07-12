@@ -29,7 +29,7 @@ that only meet all of the given parameters. The only possible parameters are
 
 Here are some examples:
 
-```bash
+```
 GET '/books?subject=Philosophy' => returns books on Philosophy
 GET '/books?author_last=Hemingway' => returns all books written by Hemingway
 GET '/books?subject=Fiction&author_last=Beckett&author_first=Samuel' => returns all fiction written by Samuel Beckett
@@ -43,7 +43,7 @@ You can also request books that match multiple subjects and multiple authors. To
 the first author_last parameter will be paired with the first author_first parameter, the second to the second, and
 so on.
 
-```bash
+```
 GET '/books?author_last=Plato&subject[]=Philosophy&subject[]=Fiction' => returns all fictional philosophical works of Plato
 GET '/books?author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles => returns all works by authors Mortimer Adler and Charles Van Doren
 GET '/books?author_last=Shakespeare&subject[]=Theater&subject[]=Fiction => returns the theatrical and fictional works of Shakespeare
@@ -55,7 +55,7 @@ You may add subjects and other authors as you desire.
 
 Examples:
 
-```bash
+```
 POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7'
 POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7&subject=Fiction'
 POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7&subject[]=Fiction&subject[]=Theater'
