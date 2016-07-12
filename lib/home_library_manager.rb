@@ -21,6 +21,7 @@ class HomeLibraryManager < Sinatra::Base
     config = YAML.load(File.open('config.yml'))
     DataMapper::Logger.new($stdout, :debug) # for debugging
     DataMapper.setup(:default, "#{config['dbengine']}://#{config['user']}:#{config['pass']}@#{config['host']}/#{config['database']}")
+    DataMapper::Model.raise_on_save_failure = true
     DataMapper.finalize
     DataMapper.auto_migrate!
 
@@ -72,7 +73,12 @@ class HomeLibraryManager < Sinatra::Base
   # Add a book to the library
   post '/books' do
     # TODO: User validation?
-    message = @manager.add_book(params[:isbn], params[:title], params[:author_last], params[:author_first], params[:subject])
+    begin
+      message = @manager.add_book(params[:isbn], params[:title], params[:author_last], params[:author_first], params[:subject])
+    rescue DataMapper::SaveFailureError
+      message = 'There was an error while saving (are you sure you provided the proper parameters?'
+    end
+
 
     if message.is_a?(String)
       generate_response(false, [], message)

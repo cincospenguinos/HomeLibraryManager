@@ -21,6 +21,8 @@ class BookInformationManager
       data = {}
       data[:book] = book
 
+      next if options[:title] && book.title != options[:title] # TODO: Is there a better way to do all of this?
+
       # Check the authors
       data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
       next unless data[:authors]
@@ -40,17 +42,29 @@ class BookInformationManager
 
   # Returns a string message if the given information is invalid, or true if the book was added correctly.
   def add_book(isbn, title, author_last, author_first, subjects)
-    'All pieces of information (isbn, title, last name, first name) must be provided' unless isbn && title && author_last && author_first
+    return 'All pieces of information (isbn, title, last name, first name) must be provided' unless isbn && title && author_last && author_first
 
     # TODO: ISBN validation
-    book = Book.create!(:title => title, :isbn => isbn)
-    Author.create!(:last_name => author_last, :first_name => author_first, :book => book)
+    book = Book.create(:title => title, :isbn => isbn)
+    author = Author.create(:last_name => author_last, :first_name => author_first, :book => book)
+
+    book.errors.each do |error|
+      puts "BOOK ERROR #{error}"
+    end
+
+    author.errors.each do |error|
+      puts "AUTHOR ERROR #{error}"
+    end
 
     if subjects
       subjects = [ subjects ] unless subjects.is_a?(Array)
 
       subjects.each do |subject|
-        Subject.create!(:subject => subject, :book => book)
+        sub = Subject.create(:subject => subject, :book => book)
+
+        sub.errors.each do |error|
+          puts "SUBJECT ERROR #{error}"
+        end
       end
     end
 

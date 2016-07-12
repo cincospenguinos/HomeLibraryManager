@@ -29,12 +29,33 @@ RSpec.describe HomeLibraryManager do
       Borrower.create!(:last_name => 'Doe', :first_name => 'John', :date_taken => DateTime.now, :book => book)
     end
 
+    after(:all) do
+      begin
+        Author.all.destroy!
+        Subject.all.destroy!
+        Borrower.all.destroy!
+        Review.all.destroy!
+        Book.all.destroy!
+      rescue Error => e
+        puts "#{e}"
+      end
+    end
+
     it 'returns all the books in the library when asked' do
       get '/books'
 
       response = JSON.parse(last_response.body)
 
       expect(response['results'].count).to eq(4)
+    end
+
+    it 'returns all books matching a given title when asked' do
+      get '/books?title=Notes from Underground'
+
+      response = JSON.parse(last_response.body)
+
+      expect(response['results'].count).to eq(1)
+      expect(response['results'][0]['authors'][0]['last_name']).to eq('Dostoevsky')
     end
 
     it 'returns books written by a specific author when asked' do
@@ -105,8 +126,6 @@ RSpec.describe HomeLibraryManager do
     it 'adds a book when the proper information is provided' do
       post '/books?title=The Sun Also Rises&isbn=978-0-7432-9733-2&author_last=Hemingway&author_first=Ernest'
 
-      puts "#{JSON.parse(last_response.body)}"
-
       get '/books?title=The Sun Also Rises'
 
       results = JSON.parse(last_response.body)['results']
@@ -117,6 +136,9 @@ RSpec.describe HomeLibraryManager do
 
     it 'adds a book with a given subject when the proper information is provided' do
       post '/books?title=Notes from Underground&isbn=978-0-679-73452-9&author_last=Dostoevsky&author_first=Fyodor&subject=Fiction'
+
+      expect(JSON.parse(last_response.body)['successful']).to be_truthy
+
       get '/books?author_last=Dostoevsky'
 
       results = JSON.parse(last_response.body)['results']
@@ -125,11 +147,27 @@ RSpec.describe HomeLibraryManager do
       expect(results[0]['authors'][0]['last_name']).to eq('Dostoevsky')
     end
 
+    it 'adds a book with multiple subjects when the proper information is provided' do
+      post '/books?isbn=978-0-7434-7712-3&title=Hamlet&author_last=Shakespeare&author_first=William&subject[]=Fiction&subject[]=Literature'
+
+      response = JSON.parse(last_response.body)
+
+      expect(response['successful']).to be_truthy
+
+      get '/books?author_last=Shakespeare'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(1)
+      expect(results[0]['book']['title']).to eq('Hamlet')
+      expect(results[0]['authors'][0]['last_name']).to eq('Shakespeare')
+    end
+
     it 'returns a message when there is not enough information to add a book' do
       post '/books?title=herp&author_last=derp'
 
       response = JSON.parse(last_response.body)
-      expect(response['successful']).to eq('false') # TODO: Fix this
+      expect(response['successful']).to be_falsey
     end
   end
 end
