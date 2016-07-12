@@ -76,6 +76,52 @@ class BookInformationManager
     true
   end
 
+  # Stores the fact that a book is checked out given the parameters. Defaults to the current date
+  # and time if one is not provided in the options hash
+  def checkout_book(last_name, first_name, isbn, options)
+    book = Book.first(:isbn => isbn)
+    return 'No book was found with the provided ISBN' unless book
+
+    borrower = Borrower.create!(:last_name => last_name, :first_name => first_name, :date_taken => DateTime.now, :book => book)
+    borrower.update!(:email_address => options[:email_address]) if options[:email_address]
+    borrower.update!(:phone_number => options[:phone_number]) if options[:phone_number]
+
+    true
+  end
+
+  # Checks in the book matching the isbn that was borrowed by the person with the given last_name and first_name.
+  # Returns true if successful or an error message string if it was not.
+  def checkin_book(last_name, first_name, isbn)
+    book = Book.first(:isbn => isbn)
+    return 'No book was found with the provided ISBN' unless book
+
+    borrower = Borrower.first(:last_name => last_name, :first_name => first_name, :book => book)
+    return 'That person does not have that book' unless borrower
+    borrower.update!(:date_returned => DateTime.now)
+
+    true
+  end
+
+  # Returns all of the borrowers matching the given options
+  def get_all_borrowers(options)
+    borrowers = []
+    all = Borrower.all
+    all = all.all(:last_name => options[:last_name]) if options[:last_name]
+    all = all.all(:first_name => options[:first_name]) if options[:first_name]
+    all = all.all(:email_address => options[:email_address]) if options[:email_address]
+    all = all.all(:phone_number => options[:phone_number]) if options[:phone_number]
+
+    all.each do |borrower|
+      data = {}
+      data[:borrower] = borrower
+      data[:books] = Book.all(:borrower => borrower)
+
+      borrowers.push(data)
+    end
+
+    borrowers
+  end
+
   private
 
   # Helper method. Returns all the authors associated with a given book, or false if
@@ -146,12 +192,23 @@ class BookInformationManager
   # the given book matches the checked out option (that is, the user wants all checked out
   # books and the book provided is checked out)
   def verify_checked_out(checked_out_option, book)
-    true unless checked_out_option
+    return true unless checked_out_option
+    if checked_out_option == 'true'
+      checked_out_option = true
+    elsif checked_out_option == 'false'
+      checked_out_option = false
+    else
+      raise RuntimeError, 'You dun goof\'d pretty hard there bro.'
+    end
 
-    borrowers = Borrower.all(:book => book)
+    borrower = Borrower.last(:book => book)
+    return true if !checked_out_option && !borrower
+    return false if checked_out_option && !borrower
 
-    return false if borrowers.count < 1 && checked_out_option == 'true'
-    return false if borrowers.count >= 1 && checked_out_option == 'false'
+    is_checked_out = borrower.attribute_get(:date_returned) != nil
+
+    return false if checked_out_option && !is_checked_out
+    return false if !checked_out_option && is_checked_out
 
     true
   end

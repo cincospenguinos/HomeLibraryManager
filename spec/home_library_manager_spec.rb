@@ -123,6 +123,15 @@ RSpec.describe HomeLibraryManager do
       result = JSON.parse(last_response.body)['results']
       expect(result.count).to eq(3)
     end
+
+    it 'returns all books that have been checked out but are now checked in' do
+      post '/checkin?last_name=Doe&first_name=John&isbn=978-0-7434-7712-3'
+      get '/books?title=Hamlet&checked_out=false'
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(1)
+      expect(results[0]['book']['isbn']).to eq('978-0-7434-7712-3')
+    end
   end
 
   context 'when adding books to the library' do
@@ -327,14 +336,45 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'checks out a book on the current date and time when given the proper information' do
-      # post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2'
-      # response = JSON.parse(last_response.body)
-      # expect(response['successful']).to be_truthy
-      #
-      # get '/books?checked_out=true'
-      # results = JSON.parse(last_response.body)['results']
-      # expect(results.count).to be(1)
-      # expect(results[0]['book']['isbn']).to be('978-0-7432-9733-2')
+      post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?checked_out=true'
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(1)
+      expect(results[0]['book']['isbn']).to eq('978-0-7432-9733-2')
     end
+
+    it 'checks out a book and includes the email address and phone number of the person provided' do
+      post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2&email_address=john@doe.org&phone_number=KL5-3226'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?checked_out=true'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.count).to eq(1)
+      expect(results[0]['book']['isbn']).to eq('978-0-7432-9733-2')
+
+      get '/checkout?last_name=Doe'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.count).to be(1)
+      expect(results[0]['books'][0]['isbn']).to eq('978-0-7432-9733-2')
+      expect(results[0]['borrower']['last_name']).to eq('Doe')
+      expect(results[0]['borrower']['first_name']).to eq('John')
+      expect(results[0]['borrower']['email_address']).to eq('john@doe.org')
+      expect(results[0]['borrower']['phone_number']).to eq('KL5-3226')
+    end
+
+    it 'checks out no book to any request that does not have the correct parameters' do
+      post '/checkout?last_name=Doe&isbn=978-0-7432-9733-2'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
+    end
+  end
+
+  context 'when checking in a book from the library' do
+
   end
 end

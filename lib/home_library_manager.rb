@@ -51,7 +51,11 @@ class HomeLibraryManager < Sinatra::Base
       params[(key.to_sym rescue key) || key] = params.delete(key)
     end
 
-    generate_response(true, @manager.get_all_books(params), '')
+    if params[:checked_out] && (params[:checked_out] != 'true' || params[:checked_out] != 'false')
+      generate_response(false, [], 'checked_out must be either true or false')
+    else
+      generate_response(true, @manager.get_all_books(params), '')
+    end
   end
 
   # Add a book to the library
@@ -98,15 +102,48 @@ class HomeLibraryManager < Sinatra::Base
     end
   end
 
+  # Browse who has checked out what books
+  get '/checkout' do
+    # TODO: User validation necessary? If so, user validation?
+    generate_response(true, @manager.get_all_borrowers(params), '')
+  end
+
   # Let the service know a book is being checked out
   post '/checkout' do
     # TODO: User validation?
-    message = verify_checkout_params(params)
+    message = checkout_checkin_params(params)
+
+    if message.is_a?(String)
+      generate_response(false, [], message)
+    else
+      options = { :email_address =>  params[:email_address] }
+      options[:phone_number] = params[:phone_number]
+      message = @manager.checkout_book(params[:last_name], params[:first_name], params[:isbn], options)
+
+      if message.is_a?(String)
+        generate_response(false, [], message)
+      else
+        generate_response(true, [], '')
+      end
+    end
   end
 
   # Let the service know a book is being checked in
   post '/checkin' do
     # TODO: User validation?
+    message = checkout_checkin_params(params)
+
+    if message.is_a?(String)
+      generate_response(false, [], message)
+    else
+      message = @manager.checkin_book(params[:last_name], params[:first_name], params[:isbn])
+
+      if message.is_a?(String)
+        generate_response(false, [], message)
+      else
+        generate_response(true, [], '')
+      end
+    end
   end
 
   # Submit a review on a book
@@ -132,9 +169,8 @@ private
   end
 
   # Helper method. Returns a string explaining why the params provided are invalid or true if they are valid
-  def verify_checkout_params(params)
+  def checkout_checkin_params(params)
     return 'The expected parameters are not provided' unless params[:last_name] && params[:first_name] && params[:isbn]
-
     true
   end
 
