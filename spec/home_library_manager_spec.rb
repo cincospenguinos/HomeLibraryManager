@@ -139,6 +139,24 @@ RSpec.describe HomeLibraryManager do
 
       expect(response['successful']).to be_falsey
     end
+
+    it 'returns all books that match any of the given parameters when requested' do
+      get '/books?author_last=Shakespeare&subject=Philosophy&match=any'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(2)
+      expect(results[0]['book']['title']).to eq('Hamlet')
+      expect(results[1]['book']['title']).to eq('Utopia')
+    end
+
+    it 'returns all books that match any of the given subjects when requested' do
+      get '/books?subject[]=Fiction&subject[]=Philosophy&match=any'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(3)
+    end
   end
 
   context 'when adding books to the library' do

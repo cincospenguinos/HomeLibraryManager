@@ -180,22 +180,34 @@ private
   # Helper method. Checks the params provided to ensure they comply with the service. If they do not, returns
   # a string. If they do, returns a restructured version of params to better interact with the BookInformationManager
   def get_books_valid_params(params)
-    return params unless params
     return 'checked_out may only be true or false' if params[:checked_out] && !(params[:checked_out] == 'true' || params[:checked_out] == 'false')
 
-    # TODO: Set this out into its own method. We will need to do all of this stuff for every request anyway
+    params = setup_params(params)
+
+    if params[:match]
+      params[:match].map {|str| str.to_sym }
+
+      params[:match].each do |match_type|
+        return 'The provided parameter for "match" is not a supported option.' unless MATCH_OPTIONS.include?(match_type)
+      end
+    end
+
+    params
+  end
+
+  # Helper method. Ensures that the params passed have the proper form (everything is in Arrays). Returns the params
+  # hash when finished.
+  def setup_params(params)
     params[:subject] = [ params[:subject] ] if params[:subject] && params[:subject].is_a?(String)
     params[:author_last] = [ params[:author_last] ] if params[:author_last] && params[:author_last].is_a?(String)
     params[:author_first] = [ params[:author_first] ] if params[:author_first] && params[:author_first].is_a?(String)
     params[:match] = [ params[:match] ] if params[:match] && params[:match].is_a?(String)
 
-    if params[:match]
-      params[:match].keys.each do |key|
-        params[:match][(key.to_sym rescue key) || key] = params.delete(key)
-      end
-
-      params[:match].each do |match_type|
-        return 'The provided parameter for "match" is not a supported option.' unless MATCH_OPTIONS.include?(match_type)
+    if params[:checked_out]
+      if params[:checked_out] == 'true'
+        params[:checked_out] = true
+      else
+        params[:checked_out] = false
       end
     end
 
@@ -215,5 +227,5 @@ private
     true
   end
 
-  run! if app_file == $0 # This is mostly for debugging
+  # run! if app_file == $0 # This is mostly for debugging
 end

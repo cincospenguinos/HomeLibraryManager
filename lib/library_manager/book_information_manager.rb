@@ -8,13 +8,8 @@ require 'data_mapper'
 class BookInformationManager
 
   # Returns all of the books in the DB along with their various pieces of information
-  # TODO: There must be a better way to do all of this. Like using the options {} hash when calling Book.all
   def get_all_books(options = {})
-    all_books = []
-
-    options[:subject] = [ options[:subject] ] if options[:subject] && !options[:subject].is_a?(Array)
-    options[:author_last] = [ options[:author_last] ] if options[:author_last] && !options[:author_last].is_a?(Array)
-    options[:author_first] = [ options[:author_first] ] if options[:author_first] && !options[:author_first].is_a?(Array)
+    selected_books = []
 
     Book.all.each do |book|
       data = {}
@@ -28,12 +23,18 @@ class BookInformationManager
       data[:subjects] = get_all_subjects(options[:subject], book)
       next unless data[:subjects]
 
-      next unless verify_checked_out(options[:checked_out], book)
+      next unless options[:checked_out] == nil || checked_out_book_include?(options[:checked_out], book)
 
-      all_books.push(data)
+      selected_books.push(data)
     end
 
-    all_books
+    selected_books
+  end
+
+  # TODO: This
+  def get_any_books(params)
+    selected_books = []
+
   end
 
   # Returns a string message if the given information is invalid, or true if the book was added correctly.
@@ -122,6 +123,11 @@ class BookInformationManager
     borrowers
   end
 
+  # TODO: This
+  def get_any_borrowers(options)
+
+  end
+
   private
 
   # Helper method. Returns all the authors associated with a given book, or false if
@@ -188,22 +194,9 @@ class BookInformationManager
     subjects
   end
 
-  # Helper method. Returns true if we are not looking for books that are checked out, or if
-  # the given book matches the checked out option (that is, the user wants all checked out
-  # books and the book provided is checked out)
-  def verify_checked_out(checked_out_option, book)
-    return true unless checked_out_option
-
-    want_checked_out = nil
-
-    if checked_out_option == 'true'
-      want_checked_out = true
-    elsif checked_out_option == 'false'
-      want_checked_out = false
-    else
-      raise RuntimeError, 'You dun goof\'d pretty hard there bro.'
-    end
-
+  # Helper method. Returns true if given the book provided should be added to the collection that will be returned by
+  # the query, given whether or not the user desires a checked out book.
+  def checked_out_book_include?(want_checked_out, book)
     borrower = Borrower.last(:book => book)
     return true if !want_checked_out && !borrower
     return false if want_checked_out && !borrower
