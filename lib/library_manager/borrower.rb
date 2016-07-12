@@ -15,4 +15,8 @@ class Borrower
   property :date_returned, DateTime
 
   belongs_to :book
+
+  def as_json
+    super({:only => [:last_name, :first_name, :date_taken, :date_returned, :phone_number, :email_address]}.merge(options || {}))
+  end
 end

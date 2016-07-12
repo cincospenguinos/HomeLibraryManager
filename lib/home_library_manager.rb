@@ -117,6 +117,7 @@ class HomeLibraryManager < Sinatra::Base
   # Let the service know a book is being checked out
   post '/checkout' do
     # TODO: User validation?
+    message = verify_checkout_params(params)
   end
 
   # Let the service know a book is being checked in
@@ -141,8 +142,15 @@ private
 
   # Helper method. Returns string explaining why the params provided are invalid or true if they are valid.
   def new_book_valid_params(params)
-    return 'There is a piece of information missing' unless params[:isbn] && params[:title] && params[:author_first] && params[:author_last]
+    return 'The expected parameters are not provided' unless params[:isbn] && params[:title] && params[:author_first] && params[:author_last]
     return 'There are mismatched author names' if params[:author_last].size != params[:author_first].size
+    true
+  end
+
+  # Helper method. Returns a string explaining why the params provided are invalid or true if they are valid
+  def verify_checkout_params(params)
+    return 'The expected parameters are not provided' unless params[:last_name] && params[:first_name] && params[:isbn]
+
     true
   end
 

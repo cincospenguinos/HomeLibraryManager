@@ -4,10 +4,8 @@
 # certain books, grabs all the information about a given book, etc.
 require 'data_mapper'
 
+# TODO: Turn all the methods into static methods? They are basically acting as such
 class BookInformationManager
-
-  def initialize
-  end
 
   # Returns all of the books in the DB along with their various pieces of information
   def get_all_books(options = {})
@@ -23,15 +21,12 @@ class BookInformationManager
 
       next if options[:title] && book.title != options[:title] # TODO: Is there a better way to do all of this?
 
-      # Check the authors
       data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
       next unless data[:authors]
 
-      # Check the subjects
       data[:subjects] = get_all_subjects(options[:subject], book)
       next unless data[:subjects]
 
-      # Check if we are looking at books that are checked out or not
       next unless verify_checked_out(options[:checked_out], book)
 
       all_books.push(data)
@@ -160,10 +155,5 @@ class BookInformationManager
     return false if borrowers.count >= 1 && checked_out_option == 'false'
 
     true
-  end
-
-  # Helper method. Returns true if the isbn number provided is a valid one
-  def verify_isbn(isbn)
-    # TODO: This
   end
 end
