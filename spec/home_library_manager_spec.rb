@@ -3,22 +3,6 @@ require File.expand_path '../spec_helper', __FILE__
 RSpec.describe HomeLibraryManager do
 
   before(:all) do
-    File.open('library_config.yml', 'w') do |f|
-      f.write('
----
-:database:
-  :db_user: travis
-  :db_password: ''
-  :db_hostname: localhost
-  :db_name: HomeLibraryManager_test
-  :db_engine: mysql
-:data_mapper:
-  :logger_std_out: true
-  :rase_on_save_failure: true
-')
-      f.flush
-    end
-
     get '/' # This ensures that the DB is initialized and running properly
   end
 
