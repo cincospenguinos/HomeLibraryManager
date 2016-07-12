@@ -2,6 +2,24 @@ require 'rspec/core/rake_task'
 require 'yaml'
 require 'data_mapper'
 
+task :setup_travis do
+  File.open('library_config.yml', 'w') do |f|
+    f.write(
+'---
+:database:
+  :db_user: travis
+  :db_password:
+  :db_hostname: localhost
+  :db_name: HomeLibrary_test
+  :db_engine: mysql
+:data_mapper:
+  :logger_std_out: true
+  :raise_on_save_failure: true
+')
+    f.flush
+  end
+end
+
 RSpec::Core::RakeTask.new(:spec) do |t|
     t.pattern = 'spec/*_spec.rb'
     t.verbose = true
@@ -49,24 +67,6 @@ task :setup do
               ")
       f.flush
     end
-  end
-end
-
-task :setup_travis do
-  File.open('library_config.yml', 'w') do
-    f.write(
-'---
-:database:
-  :db_user: librarymanager
-  :db_password: password
-  :db_hostname: localhost
-  :db_name: HomeLibrary
-  :db_engine: mysql
-:data_mapper:
-  :logger_std_out: true
-  :raise_on_save_failure: true
-')
-    f.flush
   end
 end
 
