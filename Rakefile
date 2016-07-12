@@ -1,4 +1,3 @@
-require 'rspec/core/rake_task'
 require 'yaml'
 require 'data_mapper'
 
@@ -19,6 +18,8 @@ task :setup_travis do
     f.flush
   end
 end
+
+require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new(:spec) do |t|
     t.pattern = 'spec/*_spec.rb'
