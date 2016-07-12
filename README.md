@@ -29,29 +29,25 @@ that only meet all of the given parameters. The only possible parameters are
 
 Here are some examples:
 
-```GET '/books?subject=Philosophy'``` => returns books on Philosophy
-
-```GET '/books?author_last=Hemingway'``` => returns all books written by Hemingway
-
-```GET '/books?subject=Fiction&author_last=Beckett&author_first=Samuel'``` => returns all fiction written by Samuel Beckett
-
-```GET '/books?title=Notes from Underground'``` => returns all books with the title "Notes from Underground"
-
-```GET '/books?subject=Fiction&checked_out=true``` => returns all fiction books that have been checked out
-
-```GET '/books?author_last=Asimov&checked_out=false``` => returns all books by Asimov that are not checked out
+```bash
+GET '/books?subject=Philosophy' => returns books on Philosophy
+GET '/books?author_last=Hemingway' => returns all books written by Hemingway
+GET '/books?subject=Fiction&author_last=Beckett&author_first=Samuel' => returns all fiction written by Samuel Beckett
+GET '/books?title=Notes from Underground' => returns all books with the title "Notes from Underground"
+GET '/books?subject=Fiction&checked_out=true => returns all fiction books that have been checked out
+GET '/books?author_last=Asimov&checked_out=false => returns all books by Asimov that are not checked out
+```
   
 You can also request books that match multiple subjects and multiple authors. To do this, simply use the
 '[]' characters after the given parameter name. Note that if you do this with "author_last" and "author_first",
 the first author_last parameter will be paired with the first author_first parameter, the second to the second, and
 so on.
 
-```GET '/books?author_last=Plato&subject[]=Philosophy&subject[]=Fiction'``` => returns all fictional philosophical works of Plato
-
-```GET '/books?author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles``` => returns all works by authors Mortimer Adler and Charles Van Doren
-
-```GET '/books?author_last=Shakespeare&subject[]=Theater&subject[]=Fiction``` => returns the theatrical and fictional works of Shakespeare
-
+```bash
+GET '/books?author_last=Plato&subject[]=Philosophy&subject[]=Fiction' => returns all fictional philosophical works of Plato
+GET '/books?author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles => returns all works by authors Mortimer Adler and Charles Van Doren
+GET '/books?author_last=Shakespeare&subject[]=Theater&subject[]=Fiction => returns the theatrical and fictional works of Shakespeare
+```
 ### POST '/books'
 
 Add a book to your library using this URL. You must provide it an isbn number, an author, and a title for it to work.
@@ -59,11 +55,11 @@ You may add subjects and other authors as you desire.
 
 Examples:
 
-```POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7'```
-
-```POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7&subject=Fiction'```
-
-```POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7&subject[]=Fiction&subject[]=Theater'```
+```bash
+POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7'
+POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7&subject=Fiction'
+POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isbn=978-0-7434-8283-7&subject[]=Fiction&subject[]=Theater'
+```
 
 
 ### DELETE '/books'
