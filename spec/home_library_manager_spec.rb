@@ -182,6 +182,29 @@ RSpec.describe HomeLibraryManager do
       expect(results.count).to eq(2)
     end
 
+    it 'returns all books that match any of the given ISBNs or titles' do
+      get '/books?title=Notes from Underground&isbn[]=978-1-59308-244-4&isbn[]=978-0-7434-7712-3&match=any'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(3)
+    end
+
+    it 'returns all books that match any of the given subjects or authors' do
+      get '/books?author_last=More&subject=Fiction&match=any'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(3)
+    end
+
+    it 'returns all books that match any of the given authors, even when those authors are not in the library' do
+      get '/books?author_last[]=More&author_first[]=Thomas&author_last[]=Donne&author_first[]=John&match=any'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(1)
+    end
   end
 
   context 'when adding books to the library' do
