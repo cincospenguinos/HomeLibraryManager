@@ -15,8 +15,8 @@ class BookInformationManager
       data = {}
       data[:book] = book
 
-      next unless !options[:title] || matches_all_titles?(options[:title], book)
-      next unless !options[:isbn] || matches_all_isbns?(options[:isbn], book)
+      next unless !options[:title] || match_all_titles?(options[:title], book)
+      next unless !options[:isbn] || match_all_isbns?(options[:isbn], book)
 
       data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
       next unless data[:authors]
@@ -40,27 +40,22 @@ class BookInformationManager
     Book.all.each do |book|
       data = {}
       data[:book] = book
+      data[:authors] = Author.all(:book => book)
+      data[:subject] = Subject.all(:book => book)
 
-      next unless !options[:title] || matches_any_titles?(options[:title], book)
-      next unless !options[:isbn] || matches_any_isbns?(options[:isbn], book)
+      author_req = (options[:author_last] || options[:author_first])
+      subject_req = options[:subject]
+      isbn_req = options[:isbn]
+      title_req = options[:title]
+      check_out_req = options[:checked_out]
 
-      # Add an author iff we have no parameters on author_last or author_first, or if the author is included in one of the parameters
-      data[:authors] = []
-      Author.all(:book => book).each do |author|
-        last_verified = false
-        first_verified = false
-        last_verified = true if !options[:author_last] || options[:author_last].include?(author.last_name)
-        first_verified = true if !options[:author_first] || options[:author_first].include?(author.first_name)
-        data[:authors].push(author) if last_verified && first_verified
-      end
+      authors_pass = author_req && match_any_authors?(data[:authors], options[:author_last], options[:author_first])
+      subject_pass = subject_req && match_any_subjects?(data[:subject], options[:subject])
+      isbn_pass = isbn_req && match_any_isbns?(options[:isbn], book)
+      title_pass = title_req && match_any_titles?(options[:title], book)
+      checked_out_pass = check_out_req && checked_out_book_include?(options[:checked_out], book)
 
-      data[:subjects] = []
-      Subject.all(:book => book).each do |subject|
-        data[:subjects].push(subject) if !options[:subject] || options[:subject].include?(subject.subject)
-      end
-
-      next unless options[:checked_out] == nil || checked_out_book_include?(options[:checked_out], book)
-      next if data[:authors].size == 0 && data[:subjects].size == 0
+      next unless authors_pass || subject_pass || isbn_pass || title_pass || checked_out_pass
 
       selected_books.push(data)
     end
@@ -76,8 +71,8 @@ class BookInformationManager
       data = {}
       data[:book] = book
 
-      next unless !options[:title] || matches_any_titles?(options[:title], book)
-      next unless !options[:isbn] || matches_any_isbns?(options[:isbn], book)
+      next unless !options[:title] || match_any_titles?(options[:title], book)
+      next unless !options[:isbn] || match_any_isbns?(options[:isbn], book)
 
       data[:authors] = Author.all(:book => book)
       next unless data[:authors]
@@ -250,7 +245,7 @@ class BookInformationManager
     subjects
   end
 
-  def matches_all_titles?(titles, book)
+  def match_all_titles?(titles, book)
     add_book = true
 
     titles.each do |title|
@@ -260,7 +255,7 @@ class BookInformationManager
     add_book
   end
 
-  def matches_all_isbns?(isbns, book)
+  def match_all_isbns?(isbns, book)
     add_book = true
 
     isbns.each do |isbn|
@@ -270,7 +265,8 @@ class BookInformationManager
     add_book
   end
 
-  def matches_any_titles?(titles, book)
+  def match_any_titles?(titles, book)
+    true if !titles
     add_book = false
 
     titles.each do |title|
@@ -280,7 +276,8 @@ class BookInformationManager
     add_book
   end
 
-  def matches_any_isbns?(isbns, book)
+  def match_any_isbns?(isbns, book)
+    true if !isbns
     add_book = false
 
     isbns.each do |isbn|
@@ -288,6 +285,23 @@ class BookInformationManager
     end
 
     add_book
+  end
+
+  def match_any_authors?(authors, expected_lasts, expected_firsts)
+    authors.each do |author|
+      return true if expected_lasts && expected_lasts.include?(author.last_name)
+      return true if expected_firsts && expected_firsts.include?(author.first_name)
+    end
+
+    false
+  end
+
+  def match_any_subjects?(subjects, expected_subjects)
+    subjects.each do |subject|
+      return true if expected_subjects && expected_subjects.include?(subject.subject)
+    end
+
+    false
   end
 
   # Helper method. Returns true if given the book provided should be added to the collection that will be returned by

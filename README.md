@@ -22,24 +22,24 @@ string as follows:
 
 ### GET '/books'
 
-Returns all the books in the library. You can add extra parameters to request books
-that only meet all of the given parameters. The only possible parameters are
+Returns all the books in the library. You can throw extra parameters at it to select what types of books you
+would like to see. Below is the list of possible parameters:
 
   * author_last --> The author's last name
   * author_first --> The author's first name
   * subject --> What subject a given book belongs to (Literature, Non-Fiction, Philosophy, etc.)
   * title --> The title of a book
   * checked_out --> Whether or not the book is checked out
+  * match --> Indicate which parameters must match each other (can be 'all' or 'any' or any above parameter except 'checked_out')
 
-Here are some examples:
+By default, the `match` parameter is set to `all` - that is, the collection of books returned will match all
+of the requested parameters. Below are a few examples of this:
 
 ```
 GET '/books?subject=Philosophy' => returns books on Philosophy
 GET '/books?author_last=Hemingway' => returns all books written by Hemingway
 GET '/books?subject=Fiction&author_last=Beckett&author_first=Samuel' => returns all fiction written by Samuel Beckett
-GET '/books?title=Notes from Underground' => returns all books with the title "Notes from Underground"
-GET '/books?subject=Fiction&checked_out=true => returns all fiction books that have been checked out
-GET '/books?author_last=Asimov&checked_out=false => returns all books by Asimov that are not checked out
+GET '/books?subject=Fiction&author_last=Beckett&author_first=Samuel&match=all' => same as previous request
 ```
   
 You can also request books that match multiple subjects and multiple authors. To do this, simply use the
@@ -52,6 +52,24 @@ GET '/books?author_last=Plato&subject[]=Philosophy&subject[]=Fiction' => returns
 GET '/books?author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles' => returns all works by authors Mortimer Adler and Charles Van Doren
 GET '/books?author_last=Shakespeare&subject[]=Theater&subject[]=Fiction => returns the theatrical and fictional works of Shakespeare
 ```
+
+If you set the parameter `match=any`, then the service will return all books that match *any* of the parameters:
+
+```
+GET '/books?subject[]=Philosophy&subject[]=Fiction&match=any' => returns all books that are either Philosophy or Fiction
+GET '/books?author_last[]=Plato&author_last[]=Aristotle&match=any' => returns all books written by Plato or Aristotle
+GET '/books?author_last[]=Plato&author_last[]=Aristotle&subject=Fiction&match=any' => returns all books written by Plato or Aristotle or have a subject of Fiction
+``` 
+
+Otherwise, the query will only match the given parameter, like so:
+```
+GET '/books?subject[]=Philosophy&subject[]=Fiction&author_last=More&author_last=Nietzche&match=subject' => returns all fictional and philosophical works of More and Nietczhe
+GET '/books?subject[]=Philosophy&subject[]=Fiction&author_last=More&author_last=Nietzche&match=author_last' => returns all fictional or philosophical works written by both More and Nietczhe
+```
+
+If you set the parameter `match` to be anything other than `all` or `any`, then that parameter must exist in the request. So the request 
+```GET '/books?subject[]=Fiction&subject[]=Theater&match=author'``` will not work.
+
 ### POST '/books'
 
 Add a book to your library using this URL. You must provide it an isbn number, an author, and a title for it to work.
