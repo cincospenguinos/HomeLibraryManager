@@ -154,8 +154,8 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(2)
-      expect(results[0]['book']['title']).to eq('Hamlet')
-      expect(results[1]['book']['title']).to eq('Utopia')
+      expect(results[0]['book']['title']).to eq('Utopia')
+      expect(results[1]['book']['title']).to eq('Hamlet')
     end
 
     it 'returns all books that match any of the given subjects when requested' do
@@ -165,6 +165,23 @@ RSpec.describe HomeLibraryManager do
 
       expect(results.count).to eq(3)
     end
+
+    it 'returns all books that match any of the given ISBNs' do
+      get '/books?isbn[]=978-0-679-73452-9&isbn[]=978-1-59308-244-4&match=isbn'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(2)
+    end
+
+    it 'returns all books that match any of the given ISBNs and match=any' do
+      get '/books?isbn[]=978-0-679-73452-9&isbn[]=978-1-59308-244-4&match=any'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(2)
+    end
+
   end
 
   context 'when adding books to the library' do

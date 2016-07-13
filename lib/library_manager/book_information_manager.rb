@@ -32,11 +32,63 @@ class BookInformationManager
     selected_books
   end
 
-  # Returns all of the books that match the options passed. Only to be called if there is a match option.
+  # Returns all of the books that match the options passed. Only to be called if we are meant to match any of the
+  # things
   def get_any_books(options)
     selected_books = []
 
-    # TODO: How do we do this?
+    Book.all.each do |book|
+      data = {}
+      data[:book] = book
+
+      next unless !options[:title] || matches_any_titles?(options[:title], book)
+      next unless !options[:isbn] || matches_any_isbns?(options[:isbn], book)
+
+      # Add an author iff we have no parameters on author_last or author_first, or if the author is included in one of the parameters
+      data[:authors] = []
+      Author.all(:book => book).each do |author|
+        last_verified = false
+        first_verified = false
+        last_verified = true if !options[:author_last] || options[:author_last].include?(author.last_name)
+        first_verified = true if !options[:author_first] || options[:author_first].include?(author.first_name)
+        data[:authors].push(author) if last_verified && first_verified
+      end
+
+      data[:subjects] = []
+      Subject.all(:book => book).each do |subject|
+        data[:subjects].push(subject) if !options[:subject] || options[:subject].include?(subject.subject)
+      end
+
+      next unless options[:checked_out] == nil || checked_out_book_include?(options[:checked_out], book)
+      next if data[:authors].size == 0 && data[:subjects].size == 0
+
+      selected_books.push(data)
+    end
+
+    selected_books
+  end
+
+  # TODO This
+  def get_books_matching(matching, options)
+    selected_books = []
+
+    Book.all.each do |book|
+      data = {}
+      data[:book] = book
+
+      next unless !options[:title] || matches_any_titles?(options[:title], book)
+      next unless !options[:isbn] || matches_any_isbns?(options[:isbn], book)
+
+      data[:authors] = Author.all(:book => book)
+      next unless data[:authors]
+
+      data[:subjects] = get_all_subjects(options[:subject], book)
+      next unless data[:subjects]
+
+      next unless options[:checked_out] == nil || checked_out_book_include?(options[:checked_out], book)
+
+      selected_books.push(data)
+    end
 
     selected_books
   end

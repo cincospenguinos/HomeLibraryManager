@@ -58,10 +58,12 @@ class HomeLibraryManager < Sinatra::Base
     elsif params.is_a?(String)
       generate_response(false, [], params)
     else
-      if !params[:match] || params[:match] == 'any'
+      if !params[:match] || params[:match].include?('all')
         generate_response(true, @manager.get_all_books(params), '')
-      else
+      elsif params[:match].include?('any')
         generate_response(true, @manager.get_any_books(params), '')
+      else
+        generate_response(true, @manager.get_books_matching(params[:match], params), '')
       end
     end
   end
@@ -166,7 +168,7 @@ class HomeLibraryManager < Sinatra::Base
 
 private
 
-  MATCH_OPTIONS = [:any, :all, :author_last, :author_first, :subject]
+  MATCH_OPTIONS = [:any, :all, :author_last, :author_first, :subject, :isbn, :title]
 
   # Helper method. Generates a response in JSON and returns it.
   def generate_response(successful, results, message)
@@ -185,10 +187,8 @@ private
     params = setup_params(params)
 
     if params[:match]
-      params[:match].map {|str| str.to_sym }
-
       params[:match].each do |match_type|
-        return 'The provided parameter for "match" is not a supported option.' unless MATCH_OPTIONS.include?(match_type)
+        return 'The provided parameter for "match" is not a supported option.' unless MATCH_OPTIONS.include?(match_type.to_sym)
       end
     end
 
@@ -198,10 +198,19 @@ private
   # Helper method. Ensures that the params passed have the proper form (everything is in Arrays). Returns the params
   # hash when finished.
   def setup_params(params)
+    params = params.inject({}){|memo,(k,v)| memo[k.to_sym] = v; memo}
     params[:subject] = [ params[:subject] ] if params[:subject] && params[:subject].is_a?(String)
+
     params[:author_last] = [ params[:author_last] ] if params[:author_last] && params[:author_last].is_a?(String)
     params[:author_first] = [ params[:author_first] ] if params[:author_first] && params[:author_first].is_a?(String)
-    params[:match] = [ params[:match] ] if params[:match] && params[:match].is_a?(String)
+
+    if params[:match]
+      params[:match] = [ params[:match] ] if params[:match].is_a?(String)
+      arr = params[:match]
+      arr.map { |str| str.to_sym }
+      params[:match] = arr
+    end
+
     params[:title] = [ params[:title] ] if params[:title] && params[:title].is_a?(String)
     params[:isbn] = [ params[:isbn] ] if params[:isbn] && params[:isbn].is_a?(String)
 
