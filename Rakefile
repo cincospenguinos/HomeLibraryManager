@@ -56,8 +56,7 @@ end
 
 task :setup_travis do
   File.open('library_config.yml', 'w') do |f|
-    f.write(
-        '---
+    f.write ('---
 :database:
   :db_user: travis
   :db_password:
@@ -67,6 +66,7 @@ task :setup_travis do
 :data_mapper:
   :logger_std_out: true
   :raise_on_save_failure: true
+:root_file: \'index.html\'
 ')
     f.flush
   end

@@ -10,22 +10,22 @@ RSpec.describe HomeLibraryManager do
 
     before(:all) do
       book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
-      author = Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
-      author = Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
       Subject.create!(:subject => 'Literary Theory', :book => book)
 
       book = Book.create!(:isbn => '978-0-679-73452-9', :title => 'Notes from Underground')
-      author = Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
+      Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
       Subject.create!(:subject => 'Fiction', :book => book)
       Subject.create!(:subject => 'Literature', :book => book)
 
       book = Book.create!(:isbn => '978-1-59308-244-4', :title => 'Utopia')
-      author = Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
+      Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
       Subject.create!(:subject => 'Philosophy', :book => book)
 
       book = Book.create!(:isbn => '978-0-7434-7712-3', :title => 'Hamlet')
-      author = Author.create!(:last_name => 'Shakespeare', :first_name => 'William', :book => book)
+      Author.create!(:last_name => 'Shakespeare', :first_name => 'William', :book => book)
       Subject.create!(:subject => 'Fiction', :book => book)
       Subject.create!(:subject => 'Theatre', :book => book)
       Borrower.create!(:last_name => 'Doe', :first_name => 'John', :date_taken => DateTime.now, :book => book)
@@ -77,7 +77,7 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['subjects'].include?({'subject' => 'Philosophy'})).to be true
+      expect(results[0]['subjects'].include?({'subject' => 'Philosophy'})).to eq true
     end
 
     it 'returns all books that belong to all subjects provided when asked' do
