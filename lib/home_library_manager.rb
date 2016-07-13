@@ -18,9 +18,9 @@ class HomeLibraryManager < Sinatra::Base
 
   def initialize
     super
-    config = YAML.load(File.read('library_config.yml'))
-    db_config = config[:database]
-    data_mapper_config = config[:data_mapper]
+    @config = YAML.load(File.read('library_config.yml'))
+    db_config = YAML.load(File.read('library_config.yml'))[:database]
+    data_mapper_config = YAML.load(File.read('library_config.yml'))[:data_mapper]
 
     DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
 
@@ -42,7 +42,7 @@ class HomeLibraryManager < Sinatra::Base
   # Show the index file
   get '/' do
     content_type :html
-    File.read('index.html')
+    File.read(@config[:root_file])
   end
 
   # Run queries on current books in the library
@@ -202,6 +202,8 @@ private
     params[:author_last] = [ params[:author_last] ] if params[:author_last] && params[:author_last].is_a?(String)
     params[:author_first] = [ params[:author_first] ] if params[:author_first] && params[:author_first].is_a?(String)
     params[:match] = [ params[:match] ] if params[:match] && params[:match].is_a?(String)
+    params[:title] = [ params[:title] ] if params[:title] && params[:title].is_a?(String)
+    params[:isbn] = [ params[:isbn] ] if params[:isbn] && params[:isbn].is_a?(String)
 
     if params[:checked_out]
       if params[:checked_out] == 'true'

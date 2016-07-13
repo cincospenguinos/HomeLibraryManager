@@ -100,6 +100,14 @@ RSpec.describe HomeLibraryManager do
       expect(result[0]['authors'][0]['last_name']).to eq ('Dostoevsky')
     end
 
+    it 'returns all books that match a given ISBN number' do
+      get '/books?isbn=978-0-671-21209-4'
+
+      result = JSON.parse(last_response.body)['results']
+      expect(result.count).to eq(1)
+      expect(result[0]['book']['title']).to eq('How to Read a Book')
+    end
+
     it 'returns no books when the provided parameters do not match any books' do
       get '/books?author_first=FOOBAR'
 

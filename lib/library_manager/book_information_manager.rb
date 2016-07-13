@@ -15,7 +15,8 @@ class BookInformationManager
       data = {}
       data[:book] = book
 
-      next if options[:title] && book.title != options[:title]
+      next unless !options[:title] || matches_all_titles?(options[:title], book)
+      next unless !options[:isbn] || matches_all_isbns?(options[:isbn], book)
 
       data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
       next unless data[:authors]
@@ -31,10 +32,13 @@ class BookInformationManager
     selected_books
   end
 
-  # TODO: This
-  def get_any_books(params)
+  # Returns all of the books that match the options passed. Only to be called if there is a match option.
+  def get_any_books(options)
     selected_books = []
 
+    # TODO: How do we do this?
+
+    selected_books
   end
 
   # Returns a string message if the given information is invalid, or true if the book was added correctly.
@@ -192,6 +196,46 @@ class BookInformationManager
     end
 
     subjects
+  end
+
+  def matches_all_titles?(titles, book)
+    add_book = true
+
+    titles.each do |title|
+      add_book = false if title != book.title
+    end
+
+    add_book
+  end
+
+  def matches_all_isbns?(isbns, book)
+    add_book = true
+
+    isbns.each do |isbn|
+      add_book = false if isbn != book.isbn
+    end
+
+    add_book
+  end
+
+  def matches_any_titles?(titles, book)
+    add_book = false
+
+    titles.each do |title|
+      add_book = true if title == book.title
+    end
+
+    add_book
+  end
+
+  def matches_any_isbns?(isbns, book)
+    add_book = false
+
+    isbns.each do |isbn|
+      add_book = true if isbn == book.isbn
+    end
+
+    add_book
   end
 
   # Helper method. Returns true if given the book provided should be added to the collection that will be returned by
