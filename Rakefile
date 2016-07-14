@@ -42,7 +42,6 @@ task :setup do
     data[:data_mapper][:logger_std_out] = false
     data[:data_mapper][:rase_on_save_failure] = true
     data[:root_file] = 'index.html'
-    File.touch('index.html')
 
     File.open('library_config.yml', 'w') do |f|
       f.write(data.to_yaml)
