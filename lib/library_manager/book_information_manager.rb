@@ -24,7 +24,7 @@ class BookInformationManager
       data[:subjects] = get_all_subjects(options[:subject], book)
       next unless data[:subjects]
 
-      next unless options[:checked_out] == nil || checked_out_book_include?(options[:checked_out], book)
+      next unless options[:checked_out] == nil || (options[:checked_out] && book.checked_out?) || (!options[:checked_out] && !book.checked_out?)
 
       selected_books.push(data)
     end
@@ -89,44 +89,40 @@ class BookInformationManager
   # Deletes the book matching the ISBN number provided. Returns true if the book was deleted or
   # a string if the book was not deleted. TODO: Delete more than one?
   def delete_book(isbn)
-    return 'An ISBN number must be provided' unless isbn
-
-    book = Book.first(:isbn => isbn)
-    return 'No book was found with that isbn' unless book
-
-    Author.all(:book => book).destroy!
-    Review.all(:book => book).destroy!
-    Subject.all(:book => book).destroy!
-    Borrower.all(:book => book).destroy!
-    book.destroy!
-
-    true
+    false # TODO: This
   end
 
   # Stores the fact that a book is checked out given the parameters. Defaults to the current date
   # and time if one is not provided in the options hash
   def checkout_book(last_name, first_name, isbn, options)
-    book = Book.first(:isbn => isbn)
-    return 'No book was found with the provided ISBN' unless book
+    borrower = get_borrower(last_name, first_name)
 
-    borrower = Borrower.create!(:last_name => last_name, :first_name => first_name, :date_taken => DateTime.now, :book => book)
-    borrower.update!(:email_address => options[:email_address]) if options[:email_address]
-    borrower.update!(:phone_number => options[:phone_number]) if options[:phone_number]
+    borrower.update!(:email_address => options[:email_address]) if options[:email_address] && !borrower.email_address
+    borrower.update!(:phone_number => options[:phone_number]) if options[:phone_number] && !borrower.phone_number
 
-    true
+    Book.all(:isbn => isbn).each do |b|
+      unless b.checked_out?
+        CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => b)
+        return true
+      end
+    end
+
+    'That book does not seem to be available'
   end
 
   # Checks in the book matching the isbn that was borrowed by the person with the given last_name and first_name.
   # Returns true if successful or an error message string if it was not.
   def checkin_book(last_name, first_name, isbn)
-    book = Book.first(:isbn => isbn)
-    return 'No book was found with the provided ISBN' unless book
+    borrower = get_borrower(last_name, first_name)
+    Book.all(:isbn => isbn).each do |b|
+      if b.checked_out?
+        event = CheckoutEvent.last(:borrower => borrower, :book => b)
+        event.update!(:date_returned => DateTime.now)
+        return true
+      end
+    end
 
-    borrower = Borrower.first(:last_name => last_name, :first_name => first_name, :book => book)
-    return 'That person does not have that book' unless borrower
-    borrower.update!(:date_returned => DateTime.now)
-
-    true
+    'That person has not borrowed the book provided'
   end
 
   # Returns all of the borrowers matching the given options
@@ -188,6 +184,13 @@ class BookInformationManager
     end
 
     authors
+  end
+
+  # Helper method. Returns a borrower matching the last name and first name provided.
+  def get_borrower(last_name, first_name)
+    borrower = Borrower.first(:last_name => last_name, :first_name => first_name)
+    borrower = Borrower.create!(:last_name => last_name, :first_name => first_name) unless borrower
+    borrower
   end
 
   # Helper method. Returns all the subjects associated with a given book, or false

@@ -282,6 +282,16 @@ RSpec.describe HomeLibraryManager do
   end
 
   context 'when deleting books from the library' do
+
+    after(:all) do
+      Author.all.destroy!
+      Subject.all.destroy!
+      CheckoutEvent.destroy!
+      Borrower.all.destroy!
+      Review.all.destroy!
+      Book.all.destroy!
+    end
+
     it 'deletes a book when given an isbn number' do
       post '/books?isbn=978-0-671-21209-4&title=How to Read a Book&author_last=Adler&author_first=Mortimer'
       get '/books?title=How to Read a Book'

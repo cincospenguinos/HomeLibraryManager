@@ -11,10 +11,8 @@ class Borrower
   property :first_name, String, :required => true
   property :phone_number, String
   property :email_address, String
-  property :date_taken, DateTime, :required => true
-  property :date_returned, DateTime
 
-  belongs_to :book
+  has n, :checkout_event
 
   def as_json(options = nil)
     super({:only => [:last_name, :first_name, :date_taken, :date_returned, :phone_number, :email_address]}.merge(options || {}))

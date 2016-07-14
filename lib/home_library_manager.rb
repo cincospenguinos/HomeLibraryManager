@@ -12,6 +12,7 @@ require_relative 'library_manager/author.rb'
 require_relative 'library_manager/subject.rb'
 require_relative 'library_manager/review.rb'
 require_relative 'library_manager/borrower.rb'
+require_relative 'library_manager/checkout_event'
 require_relative 'library_manager/book_information_manager'
 
 class HomeLibraryManager < Sinatra::Base
@@ -19,9 +20,8 @@ class HomeLibraryManager < Sinatra::Base
   def initialize
     super
     @config = YAML.load(File.read('library_config.yml'))
-    db_config = YAML.load(File.read('library_config.yml'))[:database]
-    data_mapper_config = YAML.load(File.read('library_config.yml'))[:data_mapper]
-
+    db_config = @config[:database]
+    data_mapper_config = @config[:data_mapper]
     DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
 
     if data_mapper_config[:logger_std_out]
@@ -31,7 +31,6 @@ class HomeLibraryManager < Sinatra::Base
     DataMapper::Model.raise_on_save_failure = data_mapper_config[:raise_on_save_failure]
     DataMapper.finalize
     DataMapper.auto_migrate!
-
     @manager = BookInformationManager.new
   end
 
@@ -49,9 +48,6 @@ class HomeLibraryManager < Sinatra::Base
   get '/books' do
     options = params
     params = get_books_valid_params(options)
-
-    # puts "PARAMS: #{params}"
-    # puts "OPTIONS: #{options}"
 
     if !params
       generate_response(true, @manager.get_all_books({}), '')
@@ -140,7 +136,6 @@ class HomeLibraryManager < Sinatra::Base
 
   # Let the service know a book is being checked in
   post '/checkin' do
-    # TODO: User validation?
     message = checkout_checkin_params(params)
 
     if message.is_a?(String)
