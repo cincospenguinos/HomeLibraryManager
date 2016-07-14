@@ -87,9 +87,23 @@ class BookInformationManager
   end
 
   # Deletes the book matching the ISBN number provided. Returns true if the book was deleted or
-  # a string if the book was not deleted. TODO: Delete more than one?
-  def delete_book(isbn)
-    false # TODO: This
+  # a string if the book was not deleted.
+  def delete_book(isbns)
+    return 'No ISBN was provided!' unless isbns
+
+    destroyed = true
+
+    isbns.each do |isbn|
+      Book.all(:isbn => isbn).each do |book|
+        destroyed = Subject.all(:book => book).destroy!
+        destroyed = CheckoutEvent.all(:book => book).destroy!
+        destroyed = Review.all(:book => book).destroy!
+        destroyed = Author.all(:book => book).destroy!
+        book.destroy
+      end
+    end
+
+    destroyed
   end
 
   # Stores the fact that a book is checked out given the parameters. Defaults to the current date
@@ -113,7 +127,7 @@ class BookInformationManager
   # Checks in the book matching the isbn that was borrowed by the person with the given last_name and first_name.
   # Returns true if successful or an error message string if it was not.
   def checkin_book(last_name, first_name, isbn)
-    borrower = get_borrower(last_name, first_name)
+    borrower = Borrower.first_or_create(:last_name => last_name, :first_name => first_name)
     Book.all(:isbn => isbn).each do |b|
       if b.checked_out?
         event = CheckoutEvent.last(:borrower => borrower, :book => b)
@@ -134,12 +148,7 @@ class BookInformationManager
     all = all.all(:email_address => options[:email_address]) if options[:email_address]
     all = all.all(:phone_number => options[:phone_number]) if options[:phone_number]
 
-    # And now the tricky part
-    current_borrower_id = nil
-    all.each do |borrower|
-
-
-    end
+    # TODO: This
 
     borrowers
   end
@@ -184,13 +193,6 @@ class BookInformationManager
     end
 
     authors
-  end
-
-  # Helper method. Returns a borrower matching the last name and first name provided.
-  def get_borrower(last_name, first_name)
-    borrower = Borrower.first(:last_name => last_name, :first_name => first_name)
-    borrower = Borrower.create!(:last_name => last_name, :first_name => first_name) unless borrower
-    borrower
   end
 
   # Helper method. Returns all the subjects associated with a given book, or false

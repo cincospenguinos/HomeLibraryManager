@@ -92,6 +92,7 @@ class HomeLibraryManager < Sinatra::Base
   # Remove a book from the library
   delete '/books' do
     # TODO: User validation?
+    params[:isbn] = [ params[:isbn] ] if params[:isbn]
     begin
       message = @manager.delete_book(params[:isbn])
     rescue DataMapper::ImmutableDeletedError => e

@@ -302,7 +302,7 @@ RSpec.describe HomeLibraryManager do
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
-      get '/books?title=How to Read a Book'
+      get '/books?isbn=978-0-671-21209-4'
       results = JSON.parse(last_response.body)['results']
       expect(results.size).to eq(0)
     end
