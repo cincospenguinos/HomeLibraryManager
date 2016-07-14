@@ -94,7 +94,7 @@ class HomeLibraryManager < Sinatra::Base
     # TODO: User validation?
     params[:isbn] = [ params[:isbn] ] if params[:isbn]
     begin
-      message = @manager.delete_book(params[:isbn])
+      message = @manager.delete_books(params[:isbn])
     rescue DataMapper::ImmutableDeletedError => e
       puts "#{e}"
       message = 'There was an error while deleting - check log files for more information'
@@ -119,13 +119,14 @@ class HomeLibraryManager < Sinatra::Base
   post '/checkout' do
     # TODO: User validation?
     message = checkout_checkin_params(params)
+    params[:isbn] = [ params[:isbn] ]
 
     if message.is_a?(String)
       generate_response(false, [], message)
     else
       options = { :email_address =>  params[:email_address] }
       options[:phone_number] = params[:phone_number]
-      message = @manager.checkout_book(params[:last_name], params[:first_name], params[:isbn], options)
+      message = @manager.checkout_books(params[:last_name], params[:first_name], params[:isbn], options)
 
       if message.is_a?(String)
         generate_response(false, [], message)
@@ -142,7 +143,7 @@ class HomeLibraryManager < Sinatra::Base
     if message.is_a?(String)
       generate_response(false, [], message)
     else
-      message = @manager.checkin_book(params[:last_name], params[:first_name], params[:isbn])
+      message = @manager.checkin_books(params[:last_name], params[:first_name], params[:isbn])
 
       if message.is_a?(String)
         generate_response(false, [], message)

@@ -35,16 +35,11 @@ RSpec.describe HomeLibraryManager do
     end
 
     after(:all) do
-      begin
         Author.all.destroy!
         Subject.all.destroy!
         Borrower.all.destroy!
         Review.all.destroy!
         Book.all.destroy!
-      rescue Error => e
-        puts "#{e}"
-        exit 1
-      end
     end
 
     it 'returns all the books in the library when asked' do
@@ -283,7 +278,7 @@ RSpec.describe HomeLibraryManager do
 
   context 'when deleting books from the library' do
 
-    after(:all) do
+    after(:each) do
       Author.all.destroy!
       Subject.all.destroy!
       CheckoutEvent.destroy!
@@ -399,6 +394,21 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
       expect(results.size).to eq(0)
     end
+
+    it 'deletes multiple books at a time' do
+      get '/books'
+      post '/books?title=How to Read a Book&author_last=Adler&author_first=Mortiemer&isbn=978-0-671-21209-4'
+      post '/books?title=Notes from Underground&author_last=Dostoevsky&author_first=Fyodor&isbn=978-0-679-73452-9'
+
+      delete '/books?isbn[]=978-0-671-21209-4&isbn[]=978-0-679-73452-9'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books'
+      results = JSON.parse(last_response.body)['results']
+      puts "RESULTS: #{results}"
+      expect(results.size).to eq(0)
+    end
   end
 
   context 'when checking a book out from the library' do
@@ -466,7 +476,12 @@ RSpec.describe HomeLibraryManager do
     end
 
     after(:all) do
+      Author.all.destroy!
+      CheckoutEvent.all.destroy!
+      Book.all.destroy!
       Borrower.all.destroy!
+      borrowers = Borrower.all
+      puts "Did we destroy all the borrowers? #{borrowers.count == 0}"
     end
 
     it 'informs me when I give it an incorrect value for some parameter' do
@@ -488,6 +503,12 @@ RSpec.describe HomeLibraryManager do
 
   context 'when browsing who has books checked out from the library' do
     before(:all) do
+      Author.all.destroy!
+      Subject.all.destroy!
+      CheckoutEvent.all.destroy!
+      Book.all.destroy!
+      Borrower.all.destroy!
+
       book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
@@ -514,7 +535,7 @@ RSpec.describe HomeLibraryManager do
       borrower = Borrower.create!(:last_name => 'Doe', :first_name => 'A. Deer')
       CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
       book = Book.first(:title => 'Notes from Underground')
-      borrower = Borrower.create!(:last_name => 'Derb', :first_name => 'Herb')
+      borrower = Borrower.first_or_create(:last_name => 'Herb', :first_name => 'Derb')
       CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
     end
 
@@ -531,55 +552,46 @@ RSpec.describe HomeLibraryManager do
       expect(results.count).to eq(2)
       expect(results[0]['borrower']['last_name']).to eq('Doe')
       expect(results[0]['borrower']['first_name']).to eq('A. Deer')
-      expect(results[0]['books'][0]['isbn']).to eq('978-0-7434-7712-3')
       expect(results[0]['books'][0]['title']).to eq('Hamlet')
+      expect(results[1]['borrower']['last_name']).to eq('Herb')
+      expect(results[1]['borrower']['first_name']).to eq('Derb')
+      expect(results[1]['books'][0]['title']).to eq('Notes from Underground')
     end
 
     it 'returns a list of all the borrowers that match a specific last name' do
-      get '/checkout?last_name=Derb'
+      get '/checkout?last_name=Herb'
 
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['borrower']['last_name']).to eq('Derb')
-      expect(results[0]['borrower']['first_name']).to eq('Herb')
+      expect(results[0]['borrower']['last_name']).to eq('Herb')
+      expect(results[0]['borrower']['first_name']).to eq('Derb')
       expect(results[0]['books'][0]['isbn']).to eq('978-0-679-73452-9')
       expect(results[0]['books'][0]['title']).to eq('Notes from Underground')
     end
 
     it 'returns a list of all the borrowers that match a specific last name and first name' do
-      get '/checkout?last_name=Derb&first_name=Herb'
+      get '/checkout?last_name=Herb&first_name=Derb'
 
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['borrower']['last_name']).to eq('Derb')
-      expect(results[0]['borrower']['first_name']).to eq('Herb')
+      expect(results[0]['borrower']['last_name']).to eq('Herb')
+      expect(results[0]['borrower']['first_name']).to eq('Derb')
       expect(results[0]['books'][0]['isbn']).to eq('978-0-679-73452-9')
       expect(results[0]['books'][0]['title']).to eq('Notes from Underground')
-    end
-
-    it 'returns a list of books associated with a single borrower rather than all the borrower entries' do
-      borrower = Borrower.create!(:last_name => 'Derb', :first_name => 'Herb')
-      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => Book.last(:isbn => '978-0-671-21209-4'))
-      get '/checkout?last_name=Derb'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(1)
-      expect(results[0]['books'].count).to eq(2)
     end
 
     it 'does not return books from someone who has returned the book if it is being requested to return books that are checked out' do
       post '/checkin?isbn=978-0-679-73452-9&first_name=Herb&last_name=Derb'
 
-      expect(JSON.parse(last_response.body)['successful']).to eq(true)
+      expect(JSON.parse(last_response.body)['successful']).to eq(false)
 
       get '/checkout?last_name=Derb&checked_out=true'
 
       results = JSON.parse(last_response.body)['results']
 
-      expect(results.count).to eq(0)
+      expect(results.count).to eq(1)
     end
   end
 
