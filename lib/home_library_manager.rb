@@ -60,10 +60,8 @@ class HomeLibraryManager < Sinatra::Base
     else
       if !params[:match] || params[:match].include?('all')
         generate_response(true, @manager.get_all_books(params), '')
-      elsif params[:match].include?('any')
-        generate_response(true, @manager.get_any_books(params), '')
       else
-        generate_response(true, @manager.get_books_matching(params[:match], params), '')
+        generate_response(true, @manager.get_any_books(params), '')
       end
     end
   end
@@ -115,6 +113,8 @@ class HomeLibraryManager < Sinatra::Base
   # Browse who has checked out what books
   get '/checkout' do
     # TODO: User validation necessary? If so, user validation?
+    options = params
+    params = setup_params(options)
     generate_response(true, @manager.get_all_borrowers(params), '')
   end
 

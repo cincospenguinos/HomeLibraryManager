@@ -47,7 +47,7 @@ class BookInformationManager
       subject_req = options[:subject]
       isbn_req = options[:isbn]
       title_req = options[:title]
-      check_out_req = options[:checked_out]
+      check_out_req = !options[:checked_out].nil?
 
       authors_pass = author_req && match_any_authors?(data[:authors], options[:author_last], options[:author_first])
       subject_pass = subject_req && match_any_subjects?(data[:subject], options[:subject])
@@ -56,31 +56,6 @@ class BookInformationManager
       checked_out_pass = check_out_req && checked_out_book_include?(options[:checked_out], book)
 
       next unless authors_pass || subject_pass || isbn_pass || title_pass || checked_out_pass
-
-      selected_books.push(data)
-    end
-
-    selected_books
-  end
-
-  # TODO This
-  def get_books_matching(matching, options)
-    selected_books = []
-
-    Book.all.each do |book|
-      data = {}
-      data[:book] = book
-
-      next unless !options[:title] || match_any_titles?(options[:title], book)
-      next unless !options[:isbn] || match_any_isbns?(options[:isbn], book)
-
-      data[:authors] = Author.all(:book => book)
-      next unless data[:authors]
-
-      data[:subjects] = get_all_subjects(options[:subject], book)
-      next unless data[:subjects]
-
-      next unless options[:checked_out] == nil || checked_out_book_include?(options[:checked_out], book)
 
       selected_books.push(data)
     end
@@ -163,20 +138,14 @@ class BookInformationManager
     all = all.all(:email_address => options[:email_address]) if options[:email_address]
     all = all.all(:phone_number => options[:phone_number]) if options[:phone_number]
 
+    # And now the tricky part
+    current_borrower_id = nil
     all.each do |borrower|
-      data = {}
-      data[:borrower] = borrower
-      data[:books] = Book.all(:borrower => borrower)
 
-      borrowers.push(data)
+
     end
 
     borrowers
-  end
-
-  # TODO: This
-  def get_any_borrowers(options)
-
   end
 
   private

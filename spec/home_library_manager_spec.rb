@@ -456,6 +456,10 @@ RSpec.describe HomeLibraryManager do
       Borrower.create!(:last_name => 'Herb', :first_name => 'Derb', :date_taken => DateTime.now, :book => book)
     end
 
+    after(:all) do
+      Borrower.all.destroy!
+    end
+
     it 'informs me when I give it an incorrect value for some parameter' do
       post '/checkin?last_name=Herb&first_name=Derb'
       response = JSON.parse(last_response.body)
@@ -474,7 +478,96 @@ RSpec.describe HomeLibraryManager do
   end
 
   context 'when browsing who has books checked out from the library' do
-    # TODO: Test cases for this
+    before(:all) do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+      Subject.create!(:subject => 'Literary Theory', :book => book)
+
+      book = Book.create!(:isbn => '978-0-679-73452-9', :title => 'Notes from Underground')
+      Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
+      Subject.create!(:subject => 'Fiction', :book => book)
+      Subject.create!(:subject => 'Literature', :book => book)
+
+      book = Book.create!(:isbn => '978-1-59308-244-4', :title => 'Utopia')
+      Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
+      Subject.create!(:subject => 'Philosophy', :book => book)
+
+      book = Book.create!(:isbn => '978-0-7434-7712-3', :title => 'Hamlet')
+      Author.create!(:last_name => 'Shakespeare', :first_name => 'William', :book => book)
+      Subject.create!(:subject => 'Fiction', :book => book)
+      Subject.create!(:subject => 'Theatre', :book => book)
+    end
+
+    before(:each) do
+      book = Book.first(:isbn => '978-0-7434-7712-3')
+      Borrower.create!(:last_name => 'Doe', :first_name => 'A. Deer', :date_taken => DateTime.now, :book => book)
+      book = Book.first(:title => 'Notes from Underground')
+      Borrower.create!(:last_name => 'Derb', :first_name => 'Herb', :date_taken => DateTime.now, :book => book)
+    end
+
+    after(:each) do
+      Borrower.all.destroy!
+    end
+
+    it 'returns a list of all the borrowers when asked' do
+      get '/checkout'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(2)
+      expect(results[0]['borrower']['last_name']).to eq('Doe')
+      expect(results[0]['borrower']['first_name']).to eq('A. Deer')
+      expect(results[0]['books'][0]['isbn']).to eq('978-0-7434-7712-3')
+      expect(results[0]['books'][0]['title']).to eq('Hamlet')
+    end
+
+    it 'returns a list of all the borrowers that match a specific last name' do
+      get '/checkout?last_name=Derb'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(1)
+      expect(results[0]['borrower']['last_name']).to eq('Derb')
+      expect(results[0]['borrower']['first_name']).to eq('Herb')
+      expect(results[0]['books'][0]['isbn']).to eq('978-0-679-73452-9')
+      expect(results[0]['books'][0]['title']).to eq('Notes from Underground')
+    end
+
+    it 'returns a list of all the borrowers that match a specific last name and first name' do
+      get '/checkout?last_name=Derb&first_name=Herb'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(1)
+      expect(results[0]['borrower']['last_name']).to eq('Derb')
+      expect(results[0]['borrower']['first_name']).to eq('Herb')
+      expect(results[0]['books'][0]['isbn']).to eq('978-0-679-73452-9')
+      expect(results[0]['books'][0]['title']).to eq('Notes from Underground')
+    end
+
+    it 'returns a list of books associated with a single borrower rather than all the borrower entries' do
+      Borrower.create!(:last_name => 'Derb', :first_name => 'Herb', :date_taken => DateTime.now, :book => Book.last(:isbn => '978-0-671-21209-4'))
+      get '/checkout?last_name=Derb'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(1)
+      expect(results[0]['books'].count).to eq(2)
+    end
+
+    it 'does not return books from someone who has returned the book if it is being requested to return books that are checked out' do
+      post '/checkin?isbn=978-0-679-73452-9&first_name=Herb&last_name=Derb'
+
+      expect(JSON.parse(last_response.body)['successful']).to eq(true)
+
+      get '/checkout?last_name=Derb&checked_out=true'
+
+      results = JSON.parse(last_response.body)['results']
+
+      expect(results.count).to eq(0)
+    end
   end
 
   context 'when browsing reviews for various books' do

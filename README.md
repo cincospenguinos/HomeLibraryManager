@@ -30,7 +30,7 @@ would like to see. Below is the list of possible parameters:
   * subject --> What subject a given book belongs to (Literature, Non-Fiction, Philosophy, etc.)
   * title --> The title of a book
   * checked_out --> Whether or not the book is checked out
-  * match --> Indicate which parameters must match each other (can be 'all' or 'any' or any above parameter except 'checked_out')
+  * match --> Indicate whether to match all of the given parameters or any of the given parameters
 
 By default, the `match` parameter is set to `all` - that is, the collection of books returned will match all
 of the requested parameters. Below are a few examples of this:
@@ -61,15 +61,6 @@ GET '/books?author_last[]=Plato&author_last[]=Aristotle&match=any' => returns al
 GET '/books?author_last[]=Plato&author_last[]=Aristotle&subject=Fiction&match=any' => returns all books written by Plato or Aristotle or have a subject of Fiction
 ``` 
 
-Otherwise, the query will only match the given parameter, like so:
-```
-GET '/books?subject[]=Philosophy&subject[]=Fiction&author_last=More&author_last=Nietzche&match=subject' => returns all fictional and philosophical works of More and Nietczhe
-GET '/books?subject[]=Philosophy&subject[]=Fiction&author_last=More&author_last=Nietzche&match=author_last' => returns all fictional or philosophical works written by both More and Nietczhe
-```
-
-If you set the parameter `match` to be anything other than `all` or `any`, then that parameter must exist in the request. So the request 
-```GET '/books?subject[]=Fiction&subject[]=Theater&match=author'``` will not work.
-
 ### POST '/books'
 
 Add a book to your library using this URL. You must provide it an isbn number, an author, and a title for it to work.
@@ -88,9 +79,38 @@ POST '/books?author_last=Shakespeare&author_first=William&title=Tempest, The&isb
 
 Delete a book matching the given ISBN. This does nothing if the book you are attempting to delete doesn't exist.
 
+Example:
+
+```
+DELETE '/books?isbn=978-0-7434-8283-7' => removes The Tempest by Shakespeare from the library
+```
+
 ### GET '/checkout'
 
-Returns all the people who have checked out books from your library. This still needs to be implemented.
+Returns all the people who have checked out books from your library. The available parameters are
+
+* last_name --> Last name of the person who borrowed the book
+* first_name --> First name of the person who borrowed the book
+* phone_number --> Phone number of the person who borrowed the book
+* email_address --> Email address of the person who borrowed the book
+* checked_out --> Whether or not you want all of the books they have checked out
+
+Submitting a GET request at this URL with any of those parameters will return all of the people who
+match all of the provided parameters as well as all the books they have ever checked out. Below are some examples:
+
+```
+GET '/checkout' => returns everyone who checked out a book and what books they checked out a book and their books
+GET '/checkout?last_name=Doe' => returns everyone with the last name of "Doe" who checked out a book and their books
+GET '/checkout?last_name=Doe&first_name=Jane' => returns everyone with the name "Jane Doe" who checked out a book and their books
+GET '/checkout?phone_number=KL5-3226' => returns everyone who checked out a book with that phone number
+GET '/checkout?last_name=Doe&checked_out=true' => returns everyone with the last name "Doe" who checked out a book and only the books that are still checked out
+GET '/checkout?last_name=Doe&first_name=Jane&checked_out=false' => returns everyone with the name of "Jane Doe" who checked out a book and the books they have returned.
+```
+
+Remember that the only required parameters to be in the database are first_name and last_name. If you search for borrowers
+by phone number or email address, only the people who had either of those parameters included will show up in your searches.
+So if Jane Doe didn't provide a phone number when you added her to the system, and later you tried to find her by using
+the phone number you have for her, you'll be out of luck.
 
 ### POST '/checkout'
 
@@ -102,10 +122,10 @@ Register that someone is checking in a book. This still needs to be implemented.
 
 ## How do I deploy it?
 
-1. Clone this repo into the repository of your choosing
+1. Clone this repo into the directory of your choosing
 2. Rake within the repository
 3. Modify any generated files as requested (library_config.yml should be one of them)
-4. Deploy according to your desires.
+4. Deploy according to your web server's configuration.
 
 I don't really want to tell you how you should be deploying this service as it was intended to be taken and
 modified according to the needs/desires of those who use it. Regardless, following the above instructions will
