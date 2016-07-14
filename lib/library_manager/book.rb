@@ -13,7 +13,14 @@ class Book
   has n, :authors
   has n, :subjects
   has n, :reviews
-  has 1, :borrower
+  has n, :checkout_event
+
+  # Returns true if the book is currently checked out
+  def checked_out?
+    evt = CheckoutEvent.last(:book => self)
+    return true unless !evt || evt.attribute_get(:date_returned)
+    false
+  end
 
   def as_json(options = nil)
     super({:only => [:isbn, :title]}.merge(options || {}))
