@@ -72,4 +72,4 @@ task :setup_travis do
   end
 end
 
-task :default => [:setup, :db, :test]
+task :default => [:setup, :test]

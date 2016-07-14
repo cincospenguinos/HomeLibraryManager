@@ -37,6 +37,7 @@ RSpec.describe HomeLibraryManager do
     after(:all) do
         Author.all.destroy!
         Subject.all.destroy!
+        CheckoutEvent.all.destroy!
         Borrower.all.destroy!
         Review.all.destroy!
         Book.all.destroy!
@@ -406,7 +407,6 @@ RSpec.describe HomeLibraryManager do
 
       get '/books'
       results = JSON.parse(last_response.body)['results']
-      puts "RESULTS: #{results}"
       expect(results.size).to eq(0)
     end
   end
@@ -480,8 +480,6 @@ RSpec.describe HomeLibraryManager do
       CheckoutEvent.all.destroy!
       Book.all.destroy!
       Borrower.all.destroy!
-      borrowers = Borrower.all
-      puts "Did we destroy all the borrowers? #{borrowers.count == 0}"
     end
 
     it 'informs me when I give it an incorrect value for some parameter' do
