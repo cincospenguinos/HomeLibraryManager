@@ -1,5 +1,7 @@
 require File.expand_path '../spec_helper', __FILE__
 
+#TODO : Fix everything
+
 RSpec.describe HomeLibraryManager do
 
   before(:all) do
@@ -28,7 +30,8 @@ RSpec.describe HomeLibraryManager do
       Author.create!(:last_name => 'Shakespeare', :first_name => 'William', :book => book)
       Subject.create!(:subject => 'Fiction', :book => book)
       Subject.create!(:subject => 'Theatre', :book => book)
-      Borrower.create!(:last_name => 'Doe', :first_name => 'John', :date_taken => DateTime.now, :book => book)
+      borrower = Borrower.create!(:last_name => 'Doe', :first_name => 'John')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
     end
 
     after(:all) do
@@ -210,16 +213,12 @@ RSpec.describe HomeLibraryManager do
   context 'when adding books to the library' do
 
     after(:each) do
-      begin
-        Author.all.destroy!
-        Subject.all.destroy!
-        Borrower.all.destroy!
-        Review.all.destroy!
-        Book.all.destroy!
-      rescue Error => e
-        puts "#{e}"
-        exit 1
-      end
+      Author.all.destroy!
+      Subject.all.destroy!
+      CheckoutEvent.all.destroy!
+      Borrower.all.destroy!
+      Review.all.destroy!
+      Book.all.destroy!
     end
 
     it 'adds a book when the proper information is provided' do
@@ -360,7 +359,8 @@ RSpec.describe HomeLibraryManager do
       book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
-      Borrower.create!(:last_name => 'Roch', :first_name => 'Mike', :date_taken => DateTime.now, :book => book)
+      borrower = Borrower.create!(:last_name => 'Roch', :first_name => 'Mike')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
 
       delete '/books?isbn=978-0-671-21209-4'
       response = JSON.parse(last_response.body)
@@ -375,7 +375,8 @@ RSpec.describe HomeLibraryManager do
       book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
-      Borrower.create!(:last_name => 'Roch', :first_name => 'Mike', :date_taken => DateTime.now, :book => book)
+      borrower = Borrower.create!(:last_name => 'Roch', :first_name => 'Mike')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
       Subject.create!(:subject => 'Literary Studies', :book => book)
       Review.create!(:first_name => 'Joe', :last_name => 'Doug', :review => 'This book was good.', :date => DateTime.now, :book => book)
@@ -397,16 +398,12 @@ RSpec.describe HomeLibraryManager do
     end
 
     after(:each) do
-      begin
-        Author.all.destroy!
-        Subject.all.destroy!
-        Borrower.all.destroy!
-        Review.all.destroy!
-        Book.all.destroy!
-      rescue Error => e
-        puts "#{e}"
-        exit 1
-      end
+      Author.all.destroy!
+      Subject.all.destroy!
+      CheckoutEvent.destroy!
+      Borrower.all.destroy!
+      Review.all.destroy!
+      Book.all.destroy!
     end
 
     it 'checks out a book on the current date and time when given the proper information' do
@@ -433,7 +430,8 @@ RSpec.describe HomeLibraryManager do
 
       get '/checkout?last_name=Doe'
       results = JSON.parse(last_response.body)['results']
-      expect(results.count).to be(1)
+
+      expect(results.count).to eq(1)
       expect(results[0]['books'][0]['isbn']).to eq('978-0-7432-9733-2')
       expect(results[0]['borrower']['last_name']).to eq('Doe')
       expect(results[0]['borrower']['first_name']).to eq('John')
@@ -453,7 +451,8 @@ RSpec.describe HomeLibraryManager do
     before(:all) do
       book = Book.create!(:isbn => '978-0-7432-9733-2', :title => 'The Sun Also Rises')
       Author.create!(:last_name => 'Hemingway', :first_name => 'Ernest', :book => book)
-      Borrower.create!(:last_name => 'Herb', :first_name => 'Derb', :date_taken => DateTime.now, :book => book)
+      borrower = Borrower.create!(:last_name => 'Herb', :first_name => 'Derb')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
     end
 
     after(:all) do
@@ -502,12 +501,15 @@ RSpec.describe HomeLibraryManager do
 
     before(:each) do
       book = Book.first(:isbn => '978-0-7434-7712-3')
-      Borrower.create!(:last_name => 'Doe', :first_name => 'A. Deer', :date_taken => DateTime.now, :book => book)
+      borrower = Borrower.create!(:last_name => 'Doe', :first_name => 'A. Deer')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
       book = Book.first(:title => 'Notes from Underground')
-      Borrower.create!(:last_name => 'Derb', :first_name => 'Herb', :date_taken => DateTime.now, :book => book)
+      borrower = Borrower.create!(:last_name => 'Derb', :first_name => 'Herb')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
     end
 
     after(:each) do
+      CheckoutEvent.all.destroy!
       Borrower.all.destroy!
     end
 
@@ -548,7 +550,8 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns a list of books associated with a single borrower rather than all the borrower entries' do
-      Borrower.create!(:last_name => 'Derb', :first_name => 'Herb', :date_taken => DateTime.now, :book => Book.last(:isbn => '978-0-671-21209-4'))
+      borrower = Borrower.create!(:last_name => 'Derb', :first_name => 'Herb')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => Book.last(:isbn => '978-0-671-21209-4'))
       get '/checkout?last_name=Derb'
 
       results = JSON.parse(last_response.body)['results']

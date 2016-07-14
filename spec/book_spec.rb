@@ -5,7 +5,7 @@ RSpec.describe Book do
     before(:all) do
       db_config = YAML.load(File.read('library_config.yml'))[:database]
       DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
-      DataMapper::Model.raise_on_save_failure = data_mapper_config[:raise_on_save_failure]
+      DataMapper::Model.raise_on_save_failure = true
       DataMapper.auto_migrate!
 
       @book1 = Book.create!(:title => 'Notes from Underground', :isbn => '978-0-679-73452-9')
@@ -26,6 +26,11 @@ RSpec.describe Book do
 
     it 'should indicate no if it is not' do
       expect(@book2.checked_out?).to be_falsey
+    end
+
+    it 'should indicate no if it was checked out but is no longer' do
+      CheckoutEvent.update!(:book => @book1, :date_returned => DateTime.now)
+      expect(@book1.checked_out?).to be_falsey
     end
   end
 end
