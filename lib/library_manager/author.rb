@@ -6,8 +6,13 @@ require 'data_mapper'
 class Author
   include DataMapper::Resource
 
+  #@return [Integer] the ID for this author
   property :id, Serial
+
+  #@return [String] the last name of this author
   property :last_name, String, :required => true
+
+  #@return [String] the first name of this author
   property :first_name, String, :required => true
 
   belongs_to :book
