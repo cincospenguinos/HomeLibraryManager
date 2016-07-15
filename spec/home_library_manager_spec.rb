@@ -35,12 +35,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     after(:all) do
-        Author.all.destroy!
-        Subject.all.destroy!
-        CheckoutEvent.all.destroy!
-        Borrower.all.destroy!
-        Review.all.destroy!
-        Book.all.destroy!
+        destroy_all
     end
 
     it 'returns all the books in the library when asked' do
@@ -209,17 +204,12 @@ RSpec.describe HomeLibraryManager do
   context 'when adding books to the library' do
 
     after(:each) do
-      Author.all.destroy!
-      Subject.all.destroy!
-      CheckoutEvent.all.destroy!
-      Borrower.all.destroy!
-      Review.all.destroy!
-      Book.all.destroy!
+      destroy_all
     end
 
     it 'adds a book when the proper information is provided' do
       post '/books?title=The Sun Also Rises&isbn=978-0-7432-9733-2&author_last=Hemingway&author_first=Ernest'
-
+      expect(JSON.parse(last_response.body)['successful']).to be_truthy
       get '/books?title=The Sun Also Rises'
 
       results = JSON.parse(last_response.body)['results']
@@ -280,12 +270,7 @@ RSpec.describe HomeLibraryManager do
   context 'when deleting books from the library' do
 
     after(:each) do
-      Author.all.destroy!
-      Subject.all.destroy!
-      CheckoutEvent.destroy!
-      Borrower.all.destroy!
-      Review.all.destroy!
-      Book.all.destroy!
+      destroy_all
     end
 
     it 'deletes a book when given an isbn number' do
@@ -397,7 +382,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes multiple books at a time' do
-      get '/books'
+      # get '/books'
       post '/books?title=How to Read a Book&author_last=Adler&author_first=Mortiemer&isbn=978-0-671-21209-4'
       post '/books?title=Notes from Underground&author_last=Dostoevsky&author_first=Fyodor&isbn=978-0-679-73452-9'
 
@@ -418,12 +403,13 @@ RSpec.describe HomeLibraryManager do
     end
 
     after(:each) do
+      CheckoutEvent.all.destroy!
       Author.all.destroy!
-      Subject.all.destroy!
-      CheckoutEvent.destroy!
-      Borrower.all.destroy!
-      Review.all.destroy!
       Book.all.destroy!
+    end
+
+    after(:all) do
+      destroy_all
     end
 
     it 'checks out a book on the current date and time when given the proper information' do
@@ -476,10 +462,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     after(:all) do
-      Author.all.destroy!
-      CheckoutEvent.all.destroy!
-      Book.all.destroy!
-      Borrower.all.destroy!
+      destroy_all
     end
 
     it 'informs me when I give it an incorrect value for some parameter' do
@@ -501,12 +484,7 @@ RSpec.describe HomeLibraryManager do
 
   context 'when browsing who has books checked out from the library' do
     before(:all) do
-      Author.all.destroy!
-      Subject.all.destroy!
-      CheckoutEvent.all.destroy!
-      Book.all.destroy!
-      Borrower.all.destroy!
-
+      destroy_all
       book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
@@ -540,6 +518,10 @@ RSpec.describe HomeLibraryManager do
     after(:each) do
       CheckoutEvent.all.destroy!
       Borrower.all.destroy!
+    end
+
+    after(:all) do
+      destroy_all
     end
 
     it 'returns a list of all the borrowers when asked' do
@@ -596,12 +578,7 @@ RSpec.describe HomeLibraryManager do
   context 'when submitting a review for a book' do
 
     before(:all) do
-      CheckoutEvent.all.destroy!
-      Review.all.destroy!
-      Subject.all.destroy!
-      Author.all.destroy!
-      Book.all.destroy!
-
+      destroy_all
       book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
@@ -622,11 +599,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     after(:all) do
-      CheckoutEvent.all.destroy!
-      Review.all.destroy!
-      Subject.all.destroy!
-      Author.all.destroy!
-      Book.all.destroy!
+      destroy_all
     end
 
     it 'saves a review when handed the proper information' do
@@ -643,5 +616,15 @@ RSpec.describe HomeLibraryManager do
       get "/books?isbn=978-0-679-73452-9"
       expect(JSON.parse(last_response.body)['results'].count).to eq(0)
     end
+  end
+
+  # Helper method. Destroys all the things.
+  def destroy_all
+    CheckoutEvent.all.destroy!
+    Borrower.all.destroy!
+    Review.all.destroy!
+    Subject.all.destroy!
+    Author.all.destroy!
+    Book.all.destroy!
   end
 end
