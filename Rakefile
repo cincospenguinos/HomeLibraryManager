@@ -59,7 +59,7 @@ desc 'Creates the necessary files to be able to run the service'
 task :setup => ['index.html', 'library_config.yml']
 
 desc 'Sets things up only for the Travis-CI environment'
-task :setup_travis do
+task :setup_travis => 'index.html' do
   File.open('library_config.yml', 'w') do |f|
     f.write ('---
 :database:
