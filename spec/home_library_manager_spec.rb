@@ -1,7 +1,5 @@
 require File.expand_path '../spec_helper', __FILE__
 
-#TODO : Fix everything
-
 RSpec.describe HomeLibraryManager do
 
   before(:all) do
@@ -396,7 +394,7 @@ RSpec.describe HomeLibraryManager do
     end
   end
 
-  context 'when checking a book out from the library' do
+  context 'when checking out a book from the library' do
     before(:each) do
       book = Book.create!(:isbn => '978-0-7432-9733-2', :title => 'The Sun Also Rises')
       Author.create!(:last_name => 'Hemingway', :first_name => 'Ernest', :book => book)
@@ -450,6 +448,12 @@ RSpec.describe HomeLibraryManager do
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
+
+    it 'does not check out a book I do not own' do
+      post '/checkout?last_name=Doe&first_name=Jane&isbn=97-0450-362-8'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
+    end
   end
 
   context 'when checking in a book from the library' do
@@ -479,6 +483,12 @@ RSpec.describe HomeLibraryManager do
       get '/books?checked_out=true'
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(0)
+    end
+
+    it 'does not checkin a book that I do not own' do
+      post '/checkin?last_name=Herb&first_name=Derb&isbn=978-0-679-73452-9'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
     end
   end
 

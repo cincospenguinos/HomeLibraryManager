@@ -17,6 +17,8 @@ require_relative 'library_manager/book_information_manager'
 
 class HomeLibraryManager < Sinatra::Base
 
+  # TODO: Configure :prod, :dev, :test?
+
   def initialize
     super
     @config = YAML.load(File.read('library_config.yml'))
@@ -24,13 +26,13 @@ class HomeLibraryManager < Sinatra::Base
     data_mapper_config = @config[:data_mapper]
     DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
 
-    if data_mapper_config[:logger_std_out]
-      DataMapper::Logger.new($stdout, :debug) # for debugging
+    if data_mapper_config[:logger_std_out] # TODO: Log to file?
+      DataMapper::Logger.new($stdout, :debug, '[DataMapper]') # for debugging
     end
 
     DataMapper::Model.raise_on_save_failure = data_mapper_config[:raise_on_save_failure]
     DataMapper.finalize
-    DataMapper.auto_migrate!
+    DataMapper.auto_upgrade!
     @manager = BookInformationManager.new
   end
 
@@ -64,7 +66,6 @@ class HomeLibraryManager < Sinatra::Base
 
   # Add a book to the library
   post '/books' do
-    # TODO: User validation?
     params.keys.each do |key|
       params[(key.to_sym rescue key) || key] = params.delete(key)
     end
@@ -91,7 +92,6 @@ class HomeLibraryManager < Sinatra::Base
 
   # Remove a book from the library
   delete '/books' do
-    # TODO: User validation?
     params[:isbn] = [ params[:isbn] ] if params[:isbn]
     begin
       message = @manager.delete_books(params[:isbn])
@@ -109,7 +109,6 @@ class HomeLibraryManager < Sinatra::Base
 
   # Browse who has checked out what books
   get '/checkout' do
-    # TODO: User validation necessary? If so, user validation?
     options = params
     params = setup_params(options)
     generate_response(true, @manager.get_all_borrowers(params), '')
@@ -117,7 +116,6 @@ class HomeLibraryManager < Sinatra::Base
 
   # Let the service know a book is being checked out
   post '/checkout' do
-    # TODO: User validation?
     message = checkout_checkin_params(params)
     params[:isbn] = [ params[:isbn] ]
 

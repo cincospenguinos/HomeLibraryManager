@@ -95,7 +95,10 @@ class BookInformationManager
   # Stores the fact that a book is checked out given the parameters. Defaults to the current date
   # and time if one is not provided in the options hash
   def checkout_books(last_name, first_name, isbns, options)
-    return 'There are multiple borrowers with those names. Please provide a borrower id!' if Borrower.all(:last_name => last_name, :first_name => first_name).count > 1
+    if Borrower.all(:last_name => last_name, :first_name => first_name).count > 1
+      return 'There are multiple borrowers with those names. Please provide a borrower id!'
+    end
+
     borrower = Borrower.first_or_create(:last_name => last_name, :first_name => first_name)
 
     borrower.update!(:email_address => options[:email_address]) if options[:email_address] && !borrower.email_address
@@ -103,7 +106,9 @@ class BookInformationManager
 
     all_checked_out = {}
     isbns.each do |isbn|
-      Book.all(:isbn => isbn).each do |b|
+      books = Book.all(:isbn => isbn)
+      return "#{isbn} does not exist in the library" unless books.count > 0
+      books.each do |b|
         unless b.checked_out?
           CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => b)
           all_checked_out[isbn] = true
@@ -121,7 +126,7 @@ class BookInformationManager
     if failed.size == 0
       true
     else
-      str = "The following books seem not to be available: "
+      str = "The following books are checked out already: "
       failed.each do |isbn|
         str += "#{isbn} "
       end

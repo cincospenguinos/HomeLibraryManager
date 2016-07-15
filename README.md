@@ -114,22 +114,71 @@ the phone number you have for her, you'll be out of luck.
 
 ### POST '/checkout'
 
-Register that someone is checking out a book. This still needs to be implemented.
+Register that someone is checking out a book. Simply provide the last name, first name, and ISBN number and it will do the rest:
+
+```
+POST '/checkout?last_name=Doe&first_name=Jane&isbn=978-0-7434-8283-7' => Checks out the book 
+```
+
+You can also checkout multiple books at a time:
+
+```
+POST '/checkout?last_name=Doe&first_name=Jane&isbn[]=978-0-7434-8283-7&isbn[]=978-0-7432-9733-2' => Checks out each book provided 
+```
 
 ### POST '/checkin'
 
-Register that someone is checking in a book. This still needs to be implemented.
+Register that someone is checking in a book. It works the same way as POST '/checkout':
+
+```
+POST '/checkout?last_name=Doe&first_name=Jane&isbn=978-0-7434-8283-7' => Checks in the book
+POST '/checkout?last_name=Doe&first_name=Jane&isbn[]=978-0-7434-8283-7&isbn[]=978-0-7432-9733-2' => Checks in each book provided
+```
+
+### POST '/reviews'
+
+You can attach a review (or any number of reviews) to a book in your library. Simply throw the necessary
+information at the endpoint '/reviews' and it will do the rest:
+
+```
+POST '/reviews?last_name=Doe&first_name=Jane&isbn=978-0-7434-8283-7&review_text=This is my review on the book blablalblabla......
+```
 
 ## How do I deploy it?
 
-1. Clone this repo into the directory of your choosing
-2. Rake within the repository
-3. Modify any generated files as requested (library_config.yml should be one of them)
-4. Deploy according to your web server's configuration.
+1. Clone this repo
+2. Run `bundler install`
+3. Run `rake`
+4. Modify library_config.yml according to your needs
+5. Run `rake` again and fix the errors that show up
+6. Deploy according to your web server
 
-I don't really want to tell you how you should be deploying this service as it was intended to be taken and
-modified according to the needs/desires of those who use it. Regardless, following the above instructions will
-ensure that all the files that the service needs will be generated for you to use.
+The actual instructions will change depending on what web server you will be using to deploy it.
+
+### What is this "library_config.yml" file?
+
+That is the file that tells the application various configuration things. Below is an example config file:
+
+``yaml
+---
+:database:
+  :db_user: librarymanager     # The name of the user that will be interacting with your DB
+  :db_password: password       # The password belonging to the user that will interact with your DB
+  :db_hostname: localhost      # Where your DB will be stored
+  :db_name: HomeLibrary        # The name of your DB
+  :db_engine: mysql            # What DB engine you will be using
+:data_mapper:
+  :logger_std_out: true        # Whether or not the logger should send output to STDOUT
+  :raise_on_save_failure: true # Whether or not an error will be raised when something doesn't save properly 
+:root_file: 'index.html'       # What file should be returned when the service receives a GET '/' request
+``
+
+A config file will be generated for you when you run `rake`. Ensure that the information that you place inside of
+it is correct. If it is not, `rake` should catch it and let you know that it isn't working. Fix the errors with
+your library_config.yml file until rake doesn't return any output.
+
+As of right now, the Rakefile will not be able to setup every database engine possible. That is another feature that
+will be provided soon. For now, MySQL is the only available engine.
 
 ## Contributing
 
@@ -139,8 +188,8 @@ You can contribute by submitting code, submitting a feature/enhancement or submi
 
 1. Fork this repo
 2. Add the bug fix or feature
-3. Add test cases in the spec file.
-4. ***Add test cases in the spec file!***
+3. Add test cases in the spec file
+4. **Add test cases in the spec file**
 5. Submit a pull request with a reference to the bug or feature you patched/implemented.
 
 I'll pull your changes and play around with them. If they work and I like them, then I'll merge them.
@@ -148,7 +197,8 @@ I'll pull your changes and play around with them. If they work and I like them, 
 ### Requesting a Feature
 
 If you would like to recommend a feature, create an issue and prepend "FEATURE" to the issue title. **Please search** before
-doing so, as someone else may have requested that feature.
+doing so, as someone else may have requested that feature. If the feature you want is already listed, simply comment on it
+mentioning that that's a feature you would like to see as well.
 
 ### Filing a Bug
 
