@@ -19,6 +19,7 @@ RSpec.describe HomeLibraryManager do
       Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
       Subject.create!(:subject => 'Fiction', :book => book)
       Subject.create!(:subject => 'Literature', :book => book)
+      Review.create!(:last_name => 'Doe', :first_name => 'Jane', :date => DateTime.now, :book => book, :review_text => 'It was good.')
 
       book = Book.create!(:isbn => '978-1-59308-244-4', :title => 'Utopia')
       Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
@@ -42,6 +43,14 @@ RSpec.describe HomeLibraryManager do
       response = JSON.parse(last_response.body)
 
       expect(response['results'].count).to eq(4)
+    end
+
+    it 'returns reviews for each of the books included, given that there are any' do
+      get '/books?isbn=978-0-679-73452-9'
+
+      response = JSON.parse(last_response.body)
+      expect(response['results'].count).to eq(1)
+      expect(response['results'][0]['reviews'].count).to eq(1)
     end
 
     it 'returns all books matching a given title when asked' do
