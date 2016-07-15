@@ -85,7 +85,7 @@ RSpec.describe HomeLibraryManager do
       result = JSON.parse(last_response.body)['results']
 
       expect(result.count).to eq(1)
-      expect(result[0]['book']['title']).to eq('Notes from Underground')
+      expect(result[0]['title']).to eq('Notes from Underground')
       expect(result[0]['authors'][0]['last_name']).to eq ('Dostoevsky')
     end
 
@@ -95,7 +95,7 @@ RSpec.describe HomeLibraryManager do
       result = JSON.parse(last_response.body)['results']
 
       expect(result.count).to eq(1)
-      expect(result[0]['book']['title']).to eq('Notes from Underground')
+      expect(result[0]['title']).to eq('Notes from Underground')
       expect(result[0]['authors'][0]['last_name']).to eq ('Dostoevsky')
     end
 
@@ -104,7 +104,7 @@ RSpec.describe HomeLibraryManager do
 
       result = JSON.parse(last_response.body)['results']
       expect(result.count).to eq(1)
-      expect(result[0]['book']['title']).to eq('How to Read a Book')
+      expect(result[0]['title']).to eq('How to Read a Book')
     end
 
     it 'returns no books when the provided parameters do not match any books' do
@@ -120,7 +120,7 @@ RSpec.describe HomeLibraryManager do
 
       result = JSON.parse(last_response.body)['results']
       expect(result.count).to eq(1)
-      expect(result[0]['book']['title']).to eq('Hamlet')
+      expect(result[0]['title']).to eq('Hamlet')
       expect(result[0]['authors'][0]['last_name']).to eq('Shakespeare')
     end
 
@@ -137,7 +137,7 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['book']['isbn']).to eq('978-0-7434-7712-3')
+      expect(results[0]['isbn']).to eq('978-0-7434-7712-3')
     end
 
     it 'informs me when I give it an incorrect value for checked_out' do
@@ -153,8 +153,8 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(2)
-      expect(results[0]['book']['title']).to eq('Utopia')
-      expect(results[1]['book']['title']).to eq('Hamlet')
+      expect(results[0]['title']).to eq('Utopia')
+      expect(results[1]['title']).to eq('Hamlet')
     end
 
     it 'returns all books that match any of the given subjects when requested' do
@@ -224,7 +224,7 @@ RSpec.describe HomeLibraryManager do
 
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(1)
-      expect(results[0]['book']['title']).to eq('The Sun Also Rises')
+      expect(results[0]['title']).to eq('The Sun Also Rises')
       expect(results[0]['authors'][0]['last_name']).to eq('Hemingway')
     end
 
@@ -237,7 +237,7 @@ RSpec.describe HomeLibraryManager do
 
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(1)
-      expect(results[0]['book']['title']).to eq('Notes from Underground')
+      expect(results[0]['title']).to eq('Notes from Underground')
       expect(results[0]['authors'][0]['last_name']).to eq('Dostoevsky')
     end
 
@@ -253,7 +253,7 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['book']['title']).to eq('Hamlet')
+      expect(results[0]['title']).to eq('Hamlet')
       expect(results[0]['authors'][0]['last_name']).to eq('Shakespeare')
     end
 
@@ -272,7 +272,7 @@ RSpec.describe HomeLibraryManager do
       get '/books?title=How to Read a Book'
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(1)
-      expect(results[0]['book']['title']).to eq('How to Read a Book')
+      expect(results[0]['title']).to eq('How to Read a Book')
       expect(results[0]['authors'].count).to eq(2)
     end
   end
@@ -435,7 +435,7 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['book']['isbn']).to eq('978-0-7432-9733-2')
+      expect(results[0]['isbn']).to eq('978-0-7432-9733-2')
     end
 
     it 'checks out a book and includes the email address and phone number of the person provided' do
@@ -446,7 +446,7 @@ RSpec.describe HomeLibraryManager do
       get '/books?checked_out=true'
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(1)
-      expect(results[0]['book']['isbn']).to eq('978-0-7432-9733-2')
+      expect(results[0]['isbn']).to eq('978-0-7432-9733-2')
 
       get '/checkout?last_name=Doe'
       results = JSON.parse(last_response.body)['results']

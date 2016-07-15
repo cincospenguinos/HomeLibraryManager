@@ -12,21 +12,14 @@ class BookInformationManager
     selected_books = []
 
     Book.all.each do |book|
-      data = {}
-      data[:book] = book
 
       next unless !options[:title] || match_all_titles?(options[:title], book)
       next unless !options[:isbn] || match_all_isbns?(options[:isbn], book)
-
-      data[:authors] = get_all_authors(options[:author_last], options[:author_first], book)
-      next unless data[:authors]
-
-      data[:subjects] = get_all_subjects(options[:subject], book)
-      next unless data[:subjects]
-
+      next unless (!options[:author_last] && !options[:author_first] ) || match_all_authors?(options[:author_last], options[:author_first], book)
+      next unless !options[:subject] || match_all_subjects?(options[:subject], book)
       next unless options[:checked_out] == nil || (options[:checked_out] && book.checked_out?) || (!options[:checked_out] && !book.checked_out?)
 
-      selected_books.push(data)
+      selected_books.push(book)
     end
 
     selected_books
@@ -38,26 +31,21 @@ class BookInformationManager
     selected_books = []
 
     Book.all.each do |book|
-      data = {}
-      data[:book] = book
-      data[:authors] = Author.all(:book => book)
-      data[:subject] = Subject.all(:book => book)
-
       author_req = (options[:author_last] || options[:author_first])
       subject_req = options[:subject]
       isbn_req = options[:isbn]
       title_req = options[:title]
       check_out_req = !options[:checked_out].nil?
 
-      authors_pass = author_req && match_any_authors?(data[:authors], options[:author_last], options[:author_first])
-      subject_pass = subject_req && match_any_subjects?(data[:subject], options[:subject])
+      authors_pass = author_req && match_any_authors?(book.authors, options[:author_last], options[:author_first])
+      subject_pass = subject_req && match_any_subjects?(book.subjects, options[:subject])
       isbn_pass = isbn_req && match_any_isbns?(options[:isbn], book)
       title_pass = title_req && match_any_titles?(options[:title], book)
       checked_out_pass = check_out_req && checked_out_book_include?(options[:checked_out], book)
 
       next unless authors_pass || subject_pass || isbn_pass || title_pass || checked_out_pass
 
-      selected_books.push(data)
+      selected_books.push(book)
     end
 
     selected_books
@@ -148,7 +136,7 @@ class BookInformationManager
     Book.all(:isbn => isbn).each do |b|
       if b.checked_out?
         event = CheckoutEvent.last(:borrower => borrower, :book => b)
-        return "That person did not return the book #{b.isbn}" unless event
+        return "That person did not checkout the book #{b.isbn}" unless event
         event.update!(:date_returned => DateTime.now)
         return true
       end
@@ -268,6 +256,23 @@ class BookInformationManager
     end
 
     add_book
+  end
+
+  def match_all_subjects?(subjects, book)
+    book.subjects.each do |subject|
+      return false unless subjects.include?(subject.subject)
+    end
+
+    true
+  end
+
+  def match_all_authors?(last_names, first_names, book)
+    book.authors.each do |author|
+      return false unless !last_names || last_names.include?(author.last_name)
+      return false unless !first_names  || first_names.include?(author.first_name)
+    end
+
+    true
   end
 
   def match_any_titles?(titles, book)

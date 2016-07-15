@@ -29,9 +29,13 @@ class Book
     evt.checked_out?
   end
 
-  # Returns a JSON string representation of this object
-  # @return [String] JSON string of this book
-  def as_json(options = nil)
-    super({:only => [:isbn, :title]}.merge(options || {}))
+  def to_json(*args)
+    {
+      :isbn => isbn,
+      :title => title,
+      :authors => Author.all(:book => self),
+      :subjects => Subject.all(:book => self),
+      :checked_out => checked_out?
+    }.to_json
   end
 end
