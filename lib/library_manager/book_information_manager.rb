@@ -104,35 +104,24 @@ class BookInformationManager
     borrower.update!(:email_address => options[:email_address]) if options[:email_address] && !borrower.email_address
     borrower.update!(:phone_number => options[:phone_number]) if options[:phone_number] && !borrower.phone_number
 
-    all_checked_out = {}
+    # Now we will attempt to checkout the books
+    books = []
     isbns.each do |isbn|
-      books = Book.all(:isbn => isbn)
-      return "#{isbn} does not exist in the library" unless books.count > 0
-      books.each do |b|
-        if b.checked_out?
-          all_checked_out[isbn] = true
-        else
-          CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => b)
-          all_checked_out[isbn] = true
+      Book.all(:isbn => isbn).each do |book|
+        unless book.checked_out?
+          books.push(book)
+          break
         end
       end
     end
 
-    failed = []
-    all_checked_out.each do |isbn, value|
-      unless value
-        failed.push(isbn)
-      end
-    end
-
-    if failed.size == 0
-      true
+    if books.size != isbns.size
+      'Not all books requested are available to be checked out!'
     else
-      str = "The following books are checked out already: "
-      failed.each do |isbn|
-        str += "#{isbn} "
+      books.each do |book|
+        CheckoutEvent.create!(:date_taken => DateTime.now, :book => book, :borrower => borrower)
       end
-      return str
+      true
     end
   end
 

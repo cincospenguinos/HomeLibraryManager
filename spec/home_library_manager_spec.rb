@@ -474,6 +474,17 @@ RSpec.describe HomeLibraryManager do
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
+
+    it 'does not complete a transaction if a book that is already checked out is requested to be checked out again' do
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+
+      post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2'
+      post '/checkout?last_name=Doe&first_name=John&isbn[]=978-0-7432-9733-2&isbn[]=978-0-7434-7712-3'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
+    end
   end
 
   context 'when checking in a book from the library' do
