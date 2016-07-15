@@ -136,12 +136,14 @@ class HomeLibraryManager < Sinatra::Base
 
   # Let the service know a book is being checked in
   post '/checkin' do
+    options = params
+    params = setup_params(options)
     message = checkout_checkin_params(params)
 
     if message.is_a?(String)
       generate_response(false, [], message)
     else
-      message = @manager.checkin_books(params[:last_name], params[:first_name], params[:isbn])
+      message = @manager.check_in_books(params[:last_name], params[:first_name], params[:isbn])
 
       if message.is_a?(String)
         generate_response(false, [], message)

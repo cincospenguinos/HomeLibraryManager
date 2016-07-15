@@ -4,6 +4,7 @@ RSpec.describe HomeLibraryManager do
 
   before(:all) do
     get '/' # This ensures that the DB is initialized and running properly
+    destroy_all
   end
 
   context 'when searching for books in the library' do
@@ -135,6 +136,9 @@ RSpec.describe HomeLibraryManager do
 
     it 'returns all books that have been checked out but are now checked in' do
       post '/checkin?last_name=Doe&first_name=John&isbn=978-0-7434-7712-3'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
       get '/books?title=Hamlet&checked_out=false'
       results = JSON.parse(last_response.body)['results']
 
@@ -493,11 +497,26 @@ RSpec.describe HomeLibraryManager do
       book = Book.create!(:isbn => '978-0-7432-9733-2', :title => 'The Sun Also Rises')
       Author.create!(:last_name => 'Hemingway', :first_name => 'Ernest', :book => book)
       borrower = Borrower.create!(:last_name => 'Herb', :first_name => 'Derb')
-      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
+
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+      Subject.create!(:subject => 'Literary Theory', :book => book)
     end
 
     after(:all) do
       destroy_all
+    end
+
+    before(:each) do
+      book = Book.first(:isbn => '978-0-7432-9733-2')
+      borrower = Borrower.first(:last_name => 'Herb')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
+    end
+
+    after(:each) do
+      CheckoutEvent.all.destroy!
     end
 
     it 'informs me when I give it an incorrect value for some parameter' do
@@ -506,7 +525,7 @@ RSpec.describe HomeLibraryManager do
       expect(response['successful']).to be_falsey
     end
 
-    it 'lets me checkin a book given the correct information' do
+    it 'lets me check in a book given the correct information' do
       post '/checkin?last_name=Herb&first_name=Derb&isbn=978-0-7432-9733-2'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
@@ -516,11 +535,32 @@ RSpec.describe HomeLibraryManager do
       expect(results.count).to eq(0)
     end
 
-    it 'does not checkin a book that I do not own' do
+    it 'does not check in a book that I do not own' do
       post '/checkin?last_name=Herb&first_name=Derb&isbn=978-0-679-73452-9'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
+
+    it 'does not check in a book that the person provided did not check out' do
+      post '/checkin?last_name=Herb&first_name=Derb&isbn=97-0757-276-0'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
+    end
+
+    it 'permits multiple books to be checked in at once' do
+      post '/books?author_last=Bologna&author_first=Bologna&isbn=97-0757-276-0&title=Complete Bullshilogna for Dummies'
+      post '/checkout?last_name=Herb&first_name=Derb&isbn=97-0757-276-0'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+      post '/checkin?last_name=Herb&first_name=Derb&isbn[]=978-0-7432-9733-2&isbn[]=978-0-671-21209-4&isbn[]=97-0757-276-0'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?checked_out=true'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.count).to eq(0)
+    end
+
   end
 
   context 'when browsing who has books checked out from the library' do

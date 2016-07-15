@@ -127,18 +127,31 @@ class BookInformationManager
 
   # Checks in the book matching the isbn that was borrowed by the person with the given last_name and first_name.
   # Returns true if successful or an error message string if it was not.
-  def checkin_books(last_name, first_name, isbn)
+  def check_in_books(last_name, first_name, isbns)
     borrower = Borrower.first_or_create(:last_name => last_name, :first_name => first_name)
-    Book.all(:isbn => isbn).each do |b|
-      if b.checked_out?
-        event = CheckoutEvent.last(:borrower => borrower, :book => b)
-        return "That person did not checkout the book #{b.isbn}" unless event
-        event.update!(:date_returned => DateTime.now)
-        return true
+
+    events = []
+    isbns.each do |isbn|
+      books = Book.all(:isbn => isbn)
+      return "The book #{isbn} is not in the library and therefore cannot be checked out" if books.count == 0
+      books.each do |b|
+        if b.checked_out?
+          evt = CheckoutEvent.last(:borrower => borrower, :book => b)
+          if evt && !evt.date_returned
+            events.push(evt)
+          else
+            return "That user did not check out the book #{isbn}"
+          end
+        end
       end
     end
 
-    'That person has not borrowed the book provided'
+    now = DateTime.now
+    events.each do |evt|
+      evt.update!(:date_returned => now)
+    end
+
+    true
   end
 
   # Returns all of the borrowers matching the given options
