@@ -452,14 +452,25 @@ RSpec.describe HomeLibraryManager do
       expect(results[0]['borrower']['phone_number']).to eq('KL5-3226')
     end
 
-    it 'checks out no book to any request that does not have the correct parameters' do
+    it 'does not check out a book given incomplete parameters' do
       post '/checkout?last_name=Doe&isbn=978-0-7432-9733-2'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
+
+      post '/checkout?first_name=Jane&isbn=978-0-7432-9733-2'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
 
     it 'does not check out a book I do not own' do
       post '/checkout?last_name=Doe&first_name=Jane&isbn=97-0450-362-8'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_falsey
+    end
+
+    it 'does not check out a book that is already checked out' do
+      post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2'
+      post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end

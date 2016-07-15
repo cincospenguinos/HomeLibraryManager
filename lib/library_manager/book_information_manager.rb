@@ -109,7 +109,9 @@ class BookInformationManager
       books = Book.all(:isbn => isbn)
       return "#{isbn} does not exist in the library" unless books.count > 0
       books.each do |b|
-        unless b.checked_out?
+        if b.checked_out?
+          all_checked_out[isbn] = true
+        else
           CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => b)
           all_checked_out[isbn] = true
         end
