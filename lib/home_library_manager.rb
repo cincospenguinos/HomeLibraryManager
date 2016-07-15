@@ -153,14 +153,19 @@ class HomeLibraryManager < Sinatra::Base
     end
   end
 
-  # Browse reviews on books
-  get '/reviews' do
-    # TODO: Just this thing and we're pretty much done with the service (for now)
-  end
-
   # Submit a review on a book
   post '/reviews' do
-    # TODO: And this thing too
+    if params[:last_name] && params[:first_name] && params[:review_text] && params[:isbn]
+      resp = @manager.add_review(params)
+
+      if resp.is_a?(String)
+        generate_response(false, [], resp)
+      else
+        generate_response(true, [], '')
+      end
+    else
+      generate_response(false, [], 'last_name, first_name, review_text and isbn must be included')
+    end
   end
 
 private
@@ -179,7 +184,7 @@ private
   # Helper method. Checks the params provided to ensure they comply with the service. If they do not, returns
   # a string. If they do, returns a restructured version of params to better interact with the BookInformationManager
   def get_books_valid_params(params)
-    return 'checked_out may only be true or false' if params[:checked_out] && !(params[:checked_out] == 'true' || params[:checked_out] == 'false')
+    return 'checked_out parameter may only be true or false' if params[:checked_out] && !(params[:checked_out] == 'true' || params[:checked_out] == 'false')
 
     params = setup_params(params)
 

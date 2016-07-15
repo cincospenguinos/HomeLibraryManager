@@ -10,7 +10,7 @@ class Review
   property :id, Serial
 
   #@return [String] the text of the review itself
-  property :review, Text, :required => true
+  property :review_text, Text, :required => true
 
   #@return [DateTime] the date this review was published
   property :date, DateTime, :required => true
@@ -24,6 +24,8 @@ class Review
   belongs_to :book
 
   def as_json(options = nil)
-    super({:only => [:review, :date, :last_name, :first_name]}.merge(options || {}))
+    super({:only => [:review_text, :date, :last_name, :first_name], :include => {
+        book: {:only => [:title, :isbn]}
+    }}.merge(options || {}))
   end
 end

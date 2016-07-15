@@ -67,7 +67,7 @@ class BookInformationManager
       subjects = [ subjects ] unless subjects.is_a?(Array)
 
       subjects.each do |subject|
-        sub = Subject.create!(:subject => subject, :book => book)
+        Subject.create!(:subject => subject, :book => book)
       end
     end
 
@@ -170,6 +170,15 @@ class BookInformationManager
     end
 
     borrowers
+  end
+
+  def add_review(params)
+    book = Book.first(:isbn => params[:isbn])
+    return 'Book with that ISBN could not be found in the library' unless book
+    Review.create!(:last_name => params[:last_name], :first_name => params[:first_name], :review_text => params[:review_text], :date => DateTime.now, :book => book)
+    true
+  # rescue DataMapper::SaveFailureError # I hope this never, ever has to be called. Because that would suck horrendously.
+  #   'The review could not be created due to a save error. Please consult the logs for more details.'
   end
 
   private

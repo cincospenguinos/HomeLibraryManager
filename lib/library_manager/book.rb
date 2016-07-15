@@ -30,12 +30,13 @@ class Book
   end
 
   def to_json(*args)
-    {
+    data = {
       :isbn => isbn,
       :title => title,
       :authors => Author.all(:book => self),
       :subjects => Subject.all(:book => self),
-      :checked_out => checked_out?
+      :checked_out => checked_out?,
+      :reviews => Review.all(:book => self)
     }.to_json
   end
 end

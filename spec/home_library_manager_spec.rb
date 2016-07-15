@@ -385,7 +385,7 @@ RSpec.describe HomeLibraryManager do
       CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
       Subject.create!(:subject => 'Literary Studies', :book => book)
-      Review.create!(:first_name => 'Joe', :last_name => 'Doug', :review => 'This book was good.', :date => DateTime.now, :book => book)
+      Review.create!(:first_name => 'Joe', :last_name => 'Doug', :review_text => 'This book was good.', :date => DateTime.now, :book => book)
 
       delete '/books?isbn=978-0-671-21209-4'
       response = JSON.parse(last_response.body)
@@ -593,11 +593,55 @@ RSpec.describe HomeLibraryManager do
     end
   end
 
-  context 'when browsing reviews for various books' do
-    # TODO: Test cases for this
-  end
-
   context 'when submitting a review for a book' do
-    # TODO: Test cases for this
+
+    before(:all) do
+      CheckoutEvent.all.destroy!
+      Review.all.destroy!
+      Subject.all.destroy!
+      Author.all.destroy!
+      Book.all.destroy!
+
+      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      borrower = Borrower.create!(:last_name => 'Roch', :first_name => 'Mike')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+      Subject.create!(:subject => 'Literary Studies', :book => book)
+
+      @review = {}
+      @review[:last] = 'Doe'
+      @review[:first] = 'Jane'
+      @review[:review_text] = "It was pretty good."
+      @review[:isbn] = '978-0-671-21209-4'
+    end
+
+    after(:each) do
+      Review.all.destroy!
+    end
+
+    after(:all) do
+      CheckoutEvent.all.destroy!
+      Review.all.destroy!
+      Subject.all.destroy!
+      Author.all.destroy!
+      Book.all.destroy!
+    end
+
+    it 'saves a review when handed the proper information' do
+      post "/reviews?last_name=#{@review[:last]}&first_name=#{@review[:first]}&review_text=#{@review[:review_text]}&isbn=#{@review[:isbn]}"
+      herp = JSON.parse(last_response.body)
+      expect(JSON.parse(last_response.body)['successful']).to be_truthy
+      get "/books?isbn=#{@review[:isbn]}"
+      expect(JSON.parse(last_response.body)['results'].count).to eq(1)
+    end
+
+    it 'does not save a review for a book that is not in the library' do
+      post "/reviews?last_name=#{@review[:last]}&first_name=#{@review[:first]}&review_text=#{@review[:review_text]}&isbn=978-0-679-73452-9"
+      expect(JSON.parse(last_response.body)['successful']).to be_falsey
+      get "/books?isbn=978-0-679-73452-9"
+      expect(JSON.parse(last_response.body)['results'].count).to eq(0)
+    end
   end
 end
