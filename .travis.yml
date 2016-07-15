@@ -1,7 +1,7 @@
 language: ruby
 rvm:
   - 2.2.5
-script: bundle exec rake -t
+script: bundle exec rake spec
 cache: bundler
 services: mysql
 before_install:
