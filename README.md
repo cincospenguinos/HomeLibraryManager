@@ -159,7 +159,7 @@ The actual instructions will change depending on what web server you will be usi
 
 That is the file that tells the application various configuration things. Below is an example config file:
 
-``yaml
+```yaml
 ---
 :database:
   :db_user: librarymanager     # The name of the user that will be interacting with your DB
@@ -171,7 +171,7 @@ That is the file that tells the application various configuration things. Below 
   :logger_std_out: true        # Whether or not the logger should send output to STDOUT
   :raise_on_save_failure: true # Whether or not an error will be raised when something doesn't save properly 
 :root_file: 'index.html'       # What file should be returned when the service receives a GET '/' request
-``
+```
 
 A config file will be generated for you when you run `rake`. Ensure that the information that you place inside of
 it is correct. If it is not, `rake` should catch it and let you know that it isn't working. Fix the errors with
