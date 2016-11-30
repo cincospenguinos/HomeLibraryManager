@@ -77,7 +77,7 @@ class HomeLibraryManager < Sinatra::Base
         books = books.all(:title => title)
       end
     end
-    
+
     data = []
 
     if !params['summary'] || params['summary'] == 'true'
@@ -87,6 +87,16 @@ class HomeLibraryManager < Sinatra::Base
     else
       books.each do |book|
         data.push(book.full_info)
+      end
+    end
+
+    if params['checked_out']
+      if params['checked_out'] == 'true'
+        data.delete_if { |book| !Book.first(:title => book[:title]).checked_out? }
+      elsif params['checked_out'] == 'false'
+        data.delete_if { |book| Book.first(:title => book[:title]).checked_out? }
+      else
+        return send_response(false, {}, 'The parameter "checked_out" must only be "true" or "false"')
       end
     end
 

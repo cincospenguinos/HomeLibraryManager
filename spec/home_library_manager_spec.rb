@@ -5,7 +5,7 @@ RSpec.describe HomeLibraryManager do
 
   before(:all) do
     # TODO: Make a test schema
-    @config = YAML.load(File.read('library_config.yml'))
+    @config = YAML.load(File.read('library_config.yml'))[:test]
     db_config = @config[:database]
     data_mapper_config = @config[:data_mapper]
     DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
@@ -95,7 +95,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns all books that belong to a specific subject when asked' do
-      get '/books?subject=Philosophy'
+      get '/books?subject=Philosophy&summary=false'
 
       results = JSON.parse(last_response.body)['results']
 
@@ -114,7 +114,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns all books that belong to all subjects provided and have the last name provided' do
-      get '/books?subject[]=Fiction&subject[]=Literature&author_last=Dostoevsky'
+      get '/books?subject[]=Fiction&subject[]=Literature&last_name=Dostoevsky'
 
       result = JSON.parse(last_response.body)['results']
 
@@ -124,7 +124,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns all books that match a given ISBN number' do
-      get '/books?isbn=978-0-671-21209-4'
+      get '/books?isbn=9780671212094'
 
       result = JSON.parse(last_response.body)['results']
       expect(result.count).to eq(1)
@@ -132,7 +132,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns no books when the provided parameters do not match any books' do
-      get '/books?author_first=FOOBAR'
+      get '/books?last_name=FOOBAR'
 
       result = JSON.parse(last_response.body)['results']
 
@@ -156,7 +156,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns all books that have been checked out but are now checked in' do
-      post '/checkin?last_name=Doe&first_name=John&isbn=978-0-7434-7712-3'
+      post '/checkin?last_name=Doe&first_name=John&isbn=9780743477123'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -164,7 +164,7 @@ RSpec.describe HomeLibraryManager do
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['isbn']).to eq('978-0-7434-7712-3')
+      expect(results[0]['isbn']).to eq('9780743477123')
     end
 
     it 'informs me when I give it an incorrect value for checked_out' do
@@ -172,64 +172,6 @@ RSpec.describe HomeLibraryManager do
       response = JSON.parse(last_response.body)
 
       expect(response['successful']).to be_falsey
-    end
-
-    it 'returns all books that match any of the given parameters when requested' do
-      get '/books?author_last=Shakespeare&subject=Philosophy&match=any'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(2)
-      expect(results[0]['title']).to eq('Utopia')
-      expect(results[1]['title']).to eq('Hamlet')
-    end
-
-    it 'returns all books that match any of the given subjects when requested' do
-      get '/books?subject[]=Fiction&subject[]=Philosophy&match=any'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(3)
-    end
-
-    it 'returns all books that match any of the given ISBNs' do
-      get '/books?isbn[]=978-0-679-73452-9&isbn[]=978-1-59308-244-4&match=isbn'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(2)
-    end
-
-    it 'returns all books that match any of the given ISBNs and match=any' do
-      get '/books?isbn[]=978-0-679-73452-9&isbn[]=978-1-59308-244-4&match=any'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(2)
-    end
-
-    it 'returns all books that match any of the given ISBNs or titles' do
-      get '/books?title=Notes from Underground&isbn[]=978-1-59308-244-4&isbn[]=978-0-7434-7712-3&match=any'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(3)
-    end
-
-    it 'returns all books that match any of the given subjects or authors' do
-      get '/books?author_last=More&subject=Fiction&match=any'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(3)
-    end
-
-    it 'returns all books that match any of the given authors, even when those authors are not in the library' do
-      get '/books?author_last[]=More&author_first[]=Thomas&author_last[]=Donne&author_first[]=John&match=any'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(1)
     end
   end
 

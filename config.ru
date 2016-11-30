@@ -1,7 +1,7 @@
 require 'rack'
 require_relative 'lib/home_library_manager'
 
-@config = YAML.load(File.read('library_config.yml'))
+@config = YAML.load(File.read('library_config.yml'))[:prod]
 db_config = @config[:database]
 data_mapper_config = @config[:data_mapper]
 DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
