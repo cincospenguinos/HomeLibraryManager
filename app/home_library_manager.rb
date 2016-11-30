@@ -154,7 +154,50 @@ class HomeLibraryManager < Sinatra::Base
 
   ## Modify something to a book that already exists in the library
   put '/books' do
-    # TODO: This
+    return send_response(false, {}, 'No isbn was provided') unless params['isbn']
+    book = Book.first(:isbn => params['isbn'])
+    return send_response(false, {}, 'No book with that isbn exists in the library') unless book
+    remove = params['remove'] && params['remove'] == 'true'
+
+    if params['authors']
+      params['authors'] = [params['authors']] unless params['authors'].is_a?(Array)
+      authors = []
+
+      params['authors'].each do |author|
+        tmp = {}
+        a = author.split(',')
+        tmp[:last_name] = a[0]
+        tmp[:first_name] = a[1] if a.size >= 2
+        authors.push(tmp)
+      end
+
+      if remove
+        authors.each do |author|
+          a = Author.all(:last_name => author[:last_name], :book => book)
+          a = a.all(:first_name => author[:first_name]) if author[:first_name]
+          a.destroy
+        end
+      else
+        authors.each do |author|
+          a = Author.first_or_create(:last_name => author[:last_name], :book => book)
+          a.update(:first_name => author[:first_name]) if author[:first_name]
+        end
+      end
+    end
+
+    if params['subjects']
+      params['subjects'] = [params['subjects']] unless params['subjects'].is_a?(Array)
+
+      params['subjects'].each do |s|
+        if remove
+          Subject.all(:subject => s, :book => book).destroy
+        else
+          Subject.first_or_create(:subject => s, :book => book)
+        end
+      end
+    end
+
+    send_response(true, {}, '')
   end
 
   # Remove a book from the library

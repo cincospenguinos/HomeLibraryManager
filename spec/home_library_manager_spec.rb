@@ -212,14 +212,38 @@ RSpec.describe HomeLibraryManager do
   end
 
   context 'when modifying books in the library' do
-    # TODO: All of these
+
+    before(:each) do
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
+      Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
+      Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
+      Subject.create!(:subject => 'Non-Fiction', :book => book)
+      Subject.create!(:subject => 'Literary Theory', :book => book)
+
+      book = Book.create!(:isbn => '9780679734529', :title => 'Notes from Underground')
+      Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
+      Subject.create!(:subject => 'Fiction', :book => book)
+      Subject.create!(:subject => 'Literature', :book => book)
+      Review.create!(:last_name => 'Doe', :first_name => 'Jane', :date => DateTime.now, :book => book, :review_text => 'It was good.')
+
+      book = Book.create!(:isbn => '9781593082444', :title => 'Utopia')
+      Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
+      Subject.create!(:subject => 'Philosophy', :book => book)
+
+      book = Book.create!(:isbn => '9780743477123', :title => 'Hamlet')
+      Author.create!(:last_name => 'Shakespeare', :first_name => 'William', :book => book)
+      Subject.create!(:subject => 'Fiction', :book => book)
+      Subject.create!(:subject => 'Theatre', :book => book)
+      borrower = Borrower.create!(:last_name => 'Doe', :first_name => 'John')
+      CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
+    end
 
     after(:each) do
       destroy_all
     end
 
     it 'allows me to add a subject' do
-      put '/books?isbn=9781593082444&subject=Fiction'
+      put '/books?isbn=9781593082444&subjects[]=Fiction'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -228,15 +252,24 @@ RSpec.describe HomeLibraryManager do
       expect(response['successful']).to be_truthy
 
       results = response['results']
+      expect(results[0]['subjects']).to include({'subject' => 'Fiction'})
     end
 
-    it 'does not add a subject twice' do
-      put '/books?isbn=9781593082444&subject=Fiction'
+    it 'does nothing if the book does not exist' do
+      put '/books?isbn=191919191&authors[]=Cool,Joe'
+      response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
 
+    it 'does not add a subject twice' do
+      put '/books?isbn=9781593082444&subjects[]=Philosophy'
+      get '/books?isbn=9781593082444&summary=false'
+      results = JSON.parse(last_response.body)['results']
+      expect(results[0]['subjects'].size).to eq(1)
+    end
+
     it 'allows me to remove a subject' do
-      put '/books?isbn=9781593082444&subject=Philosophy&remove'
+      put '/books?isbn=9781593082444&subjects[]=Philosophy&remove=true'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
     end
@@ -246,7 +279,15 @@ RSpec.describe HomeLibraryManager do
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
-      expect(Authors.all(:book => {:isbn => '9781593082444'}).size).to eq(2)
+      expect(Author.all(:book => {:isbn => '9781593082444'}).size).to eq(2)
+    end
+
+    it 'does not add an author twice' do
+      put '/books?isbn=9781593082444&authors[]=More,Thomas'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      expect(Author.all(:book => {:isbn => '9781593082444'}).size).to eq(1)
     end
   end
 
