@@ -146,7 +146,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns all books that have been checked out but are now checked in' do
-      post '/checkin?last_name=Doe&first_name=John&isbn=9780743477123'
+      post '/checkin?isbns[]=9780743477123'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -512,7 +512,11 @@ RSpec.describe HomeLibraryManager do
 
   context 'when checking in a book from the library' do
 
-    before(:all) do
+    after(:all) do
+      destroy_all
+    end
+
+    before(:each) do
       book = Book.create!(:isbn => '978-0-7432-9733-2', :title => 'The Sun Also Rises')
       Author.create!(:last_name => 'Hemingway', :first_name => 'Ernest', :book => book)
       borrower = Borrower.create!(:last_name => 'Herb', :first_name => 'Derb')
@@ -522,56 +526,54 @@ RSpec.describe HomeLibraryManager do
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
       Subject.create!(:subject => 'Literary Theory', :book => book)
-    end
+      CheckoutEvent.create!(:book => book, :borrower => borrower)
 
-    after(:all) do
-      destroy_all
-    end
-
-    before(:each) do
       book = Book.first(:isbn => '978-0-7432-9733-2')
       borrower = Borrower.first(:last_name => 'Herb')
       CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
     end
 
     after(:each) do
-      CheckoutEvent.all.destroy!
+      destroy_all
     end
 
     it 'informs me when I give it an incorrect value for some parameter' do
-      post '/checkin?last_name=Herb&first_name=Derb'
+      post '/checkin?last_name=Herb'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
 
     it 'lets me check in a book given the correct information' do
-      post '/checkin?last_name=Herb&first_name=Derb&isbn=978-0-7432-9733-2'
+      post '/checkin?isbns[]=978-0-7432-9733-2'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
       get '/books?checked_out=true'
       results = JSON.parse(last_response.body)['results']
-      expect(results.count).to eq(0)
+      expect(results.count).to eq(1)
     end
 
     it 'does not check in a book that I do not own' do
-      post '/checkin?last_name=Herb&first_name=Derb&isbn=978-0-679-73452-9'
+      post '/checkin?isbns[]=978-0-679-73452-9'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
 
     it 'does not check in a book that the person provided did not check out' do
-      post '/checkin?last_name=Herb&first_name=Derb&isbn=97-0757-276-0'
+      post '/checkin?isbns[]=97-0757-276-0'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
 
     it 'permits multiple books to be checked in at once' do
-      post '/books?author_last=Bologna&author_first=Bologna&isbn=97-0757-276-0&title=Complete Bullshilogna for Dummies'
+      post '/books?authors[]=Bologna,Bologna&isbn=97-0757-276-0&title=Complete Bullshilogna for Dummies'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
       post '/checkout?last_name=Herb&first_name=Derb&isbn=97-0757-276-0'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
-      post '/checkin?last_name=Herb&first_name=Derb&isbn[]=978-0-7432-9733-2&isbn[]=978-0-671-21209-4&isbn[]=97-0757-276-0'
+
+      post '/checkin?isbns[]=978-0-7432-9733-2&isbns[]=978-0-671-21209-4&isbns[]=97-0757-276-0'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -663,7 +665,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'does not return books from someone who has returned the book if it is being requested to return books that are checked out' do
-      post '/checkin?isbn=978-0-679-73452-9&first_name=Herb&last_name=Derb'
+      post '/checkin?isbn=978-0-679-73452-9'
 
       expect(JSON.parse(last_response.body)['successful']).to eq(false)
 
@@ -671,7 +673,7 @@ RSpec.describe HomeLibraryManager do
 
       results = JSON.parse(last_response.body)['results']
 
-      expect(results.count).to eq(1)
+      expect(results.count).to eq(0)
     end
   end
 

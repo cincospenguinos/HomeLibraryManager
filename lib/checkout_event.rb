@@ -10,7 +10,7 @@ class CheckoutEvent
   property :id, Serial
 
   #@return [DateTime] the date the associated book was checked out
-  property :date_taken, DateTime, :required => true
+  property :date_taken, DateTime, :default => DateTime.now
 
   #@return [DateTime] the date the associated book was returned
   property :date_returned, DateTime
@@ -23,6 +23,12 @@ class CheckoutEvent
   # @return [Boolean] whether or not the book is still checked out
   def checked_out?
     self.date_returned == nil
+  end
+
+  # Checks in the book
+  def check_in
+    update(:date_returned => DateTime.now)
+    checked_out?
   end
   
   def as_json(options  = nil)

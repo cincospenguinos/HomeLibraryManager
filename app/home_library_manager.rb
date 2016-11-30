@@ -18,6 +18,7 @@ class HomeLibraryManager < Sinatra::Base
 
   # TODO: Configure :prod, :dev, :test?
   # TODO: Create a client with javascript and stuff
+  # TODO: Defend against code injection attacks
 
   before do
     content_type 'application/json'
@@ -248,7 +249,6 @@ class HomeLibraryManager < Sinatra::Base
       results.push(tmp)
     end
 
-    # TODO: Figure out response
     send_response(true, results, '')
   end
 
@@ -261,8 +261,9 @@ class HomeLibraryManager < Sinatra::Base
     return send_response(false, {}, 'That book is currently checked out') if book.checked_out?
 
     borrower = Borrower.first_or_create(:last_name => params['last_name'], :first_name => params['first_name'])
-    borrower.update(:phone_number => params['phone_number']) if params['phone_number'] && !borrower.phone_number.nil?
-    borrower.update(:email_address => params['email_address']) if params['email_address'] && !borrower.email_address.nil?
+
+    borrower.update(:phone_number => params['phone_number']) if params['phone_number'] && borrower.phone_number.nil?
+    borrower.update(:email_address => params['email_address']) if params['email_address'] && borrower.email_address.nil?
 
     evt = CheckoutEvent.create(:date_taken => DateTime.now, :borrower => borrower, :book => book)
     return send_response(false, {}, 'Event could not be created') unless evt
@@ -271,7 +272,16 @@ class HomeLibraryManager < Sinatra::Base
 
   # Let the service know a book is being checked in
   post '/checkin' do
-    # TODO: This
+    return send_response(false, {}, 'No ISBN was provided') unless params['isbns']
+    params['isbns'] = [params['isbns']] unless params['isbns'].is_a?(Array)
+
+    params['isbns'].each do |isbn|
+      evt = CheckoutEvent.first(:book => {:isbn => isbn})
+      return send_response(false, {}, "No book with ISBN #{isbn} has been checked out") unless evt
+      evt.check_in
+    end
+
+    send_response(true, {}, '')
   end
 
   # Submit a review on a book
