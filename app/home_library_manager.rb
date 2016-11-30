@@ -7,12 +7,12 @@ require 'dm-migrations'
 require 'yaml'
 require 'json'
 
-require_relative 'book'
-require_relative 'author'
-require_relative 'subject'
-require_relative 'review'
-require_relative 'borrower'
-require_relative 'checkout_event'
+require_relative '../lib/book'
+require_relative '../lib/author'
+require_relative '../lib/subject'
+require_relative '../lib/review'
+require_relative '../lib/borrower'
+require_relative '../lib/checkout_event'
 
 class HomeLibraryManager < Sinatra::Base
 
@@ -38,7 +38,7 @@ class HomeLibraryManager < Sinatra::Base
   get '/' do
     # TODO: Something nicer for this
     content_type :html
-    File.read('index.html')
+    erb :index
   end
 
   ## Run queries on current books in the library
@@ -105,9 +105,51 @@ class HomeLibraryManager < Sinatra::Base
 
   ## Add a book to the library
   post '/books' do
-    # TODO: Verify the parameters
-    # TODO: Create the book and verify if it worked
-    puts "#{params}"
+    return send_response(false, {}, 'Required parameters are missing') unless params['authors'] && params['title'] && params['isbn']
+    params['authors'] = [params['authors']] unless params['authors'].is_a?(Array)
+
+    return send_response(false, {}, 'The book provided already exists') if Book.first(:isbn => params['isbn'])
+
+    authors = []
+    params['authors'].each do |a|
+      tmp = {}
+      author = a.split(',')
+      tmp[:last_name] = author[0]
+      tmp[:first_name] = author[1] if author.size >= 2
+      authors.push(tmp)
+    end
+
+    book = Book.create(:title => params['title'], :isbn => params['isbn'])
+
+    return send_response(false, {}, 'The book was unable to be saved') unless book.saved?
+
+    authors_created = []
+
+    authors.each do |author|
+      a = Author.create(:last_name => author[:last_name], :book => book)
+      a.update(:first_name => author[:first_name]) if author[:first_name]
+      unless a.saved?
+        Author.all(:book => book).destroy
+        book.destroy
+        return send_response(false, {}, "Could not create author #{author[:last_name]}")
+      end
+    end
+
+    subjects_created = []
+
+    if params['subjects']
+      params['subjects'] = [params['subjects']] unless params['subjects'].is_a?(Array)
+      params['subjects'].each do |subject|
+        sub = Subject.create(:subject => subject, :book => book)
+        unless sub
+          Author.all(:book => book).destroy
+          book.destroy
+          return send_response(false, {}, "Could not create subject #{subject}")
+        end
+      end
+    end
+
+    send_response(true, {}, '')
   end
 
   ## Modify something to a book that already exists in the library

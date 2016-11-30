@@ -1,5 +1,5 @@
 require 'rack'
-require_relative 'lib/home_library_manager'
+require_relative 'app/home_library_manager'
 
 @config = YAML.load(File.read('library_config.yml'))[:prod]
 db_config = @config[:database]

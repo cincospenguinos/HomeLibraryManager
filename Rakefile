@@ -12,7 +12,8 @@ desc 'Runs the RSpec test cases'
 task :test => :spec
 
 desc 'Sets things up only for the Travis-CI environment'
-task :setup_travis => 'index.html' do
+task :setup_travis do
+  # TODO: Set things up to work properly on Travis
   File.open('library_config.yml', 'w') do |f|
     f.write ('---
 :database:
@@ -24,7 +25,6 @@ task :setup_travis => 'index.html' do
 :data_mapper:
   :logger_std_out: true
   :raise_on_save_failure: true
-:root_file: \'index.html\'
 ')
     f.flush
   end

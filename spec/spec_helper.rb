@@ -6,7 +6,7 @@ Coveralls.wear!
 
 ENV['RACK_ENV'] = 'test'
 
-require File.expand_path '../../lib/home_library_manager', __FILE__
+require File.expand_path '../../app/home_library_manager', __FILE__
 
 module RSpecMixin
   include Rack::Test::Methods

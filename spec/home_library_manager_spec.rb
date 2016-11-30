@@ -65,14 +65,6 @@ RSpec.describe HomeLibraryManager do
       # TODO: Expectations
     end
 
-    it 'returns reviews for each of the books included, given that there are any' do
-      get '/books?isbn=9780679734529'
-
-      response = JSON.parse(last_response.body)
-      expect(response['results'].count).to eq(1)
-      expect(response['results'][0]['reviews'].count).to eq(1)
-    end
-
     it 'returns all books matching a given title when asked' do
       get '/books?title=Notes from Underground'
 
@@ -180,62 +172,42 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'adds a book when the proper information is provided' do
-      post '/books?title=The Sun Also Rises&isbn=978-0-7432-9733-2&author_last=Hemingway&author_first=Ernest'
+      post '/books?title=The Sun Also Rises&isbn=9780743297332&authors[]=Hemmingway,Ernest'
       expect(JSON.parse(last_response.body)['successful']).to be_truthy
       get '/books?title=The Sun Also Rises'
 
       results = JSON.parse(last_response.body)['results']
-      expect(results.count).to eq(1)
       expect(results[0]['title']).to eq('The Sun Also Rises')
-      expect(results[0]['authors'][0]['last_name']).to eq('Hemingway')
-    end
-
-    it 'adds a book with a given subject when the proper information is provided' do
-      post '/books?title=Notes from Underground&isbn=978-0-679-73452-9&author_last=Dostoevsky&author_first=Fyodor&subject=Fiction'
-
-      expect(JSON.parse(last_response.body)['successful']).to be_truthy
-
-      get '/books?author_last=Dostoevsky'
-
-      results = JSON.parse(last_response.body)['results']
-      expect(results.count).to eq(1)
-      expect(results[0]['title']).to eq('Notes from Underground')
-      expect(results[0]['authors'][0]['last_name']).to eq('Dostoevsky')
-    end
-
-    it 'adds a book with multiple subjects when the proper information is provided' do
-      post '/books?isbn=978-0-7434-7712-3&title=Hamlet&author_last=Shakespeare&author_first=William&subject[]=Fiction&subject[]=Literature'
-
-      response = JSON.parse(last_response.body)
-
-      expect(response['successful']).to be_truthy
-
-      get '/books?author_last=Shakespeare'
-
-      results = JSON.parse(last_response.body)['results']
-
-      expect(results.count).to eq(1)
-      expect(results[0]['title']).to eq('Hamlet')
-      expect(results[0]['authors'][0]['last_name']).to eq('Shakespeare')
     end
 
     it 'returns a message when there is not enough information to add a book' do
-      post '/books?title=herp&author_last=derp'
+      post '/books?title=herp&authors[]=derp,'
 
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_falsey
     end
 
     it 'adds a book with multiple authors are given' do
-      post '/books?isbn=978-0-671-21209-4&title=How to Read a Book&author_last[]=Adler&author_first[]=Mortimer&author_last[]=Van Doren&author_first[]=Charles'
+      post '/books?isbn=9780671212094&title=How to Read a Book&authors[]=Adler,Mortimer&authors[]=Van Doren,Charles'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
-      get '/books?title=How to Read a Book'
+      get '/books?isbn=9780671212094'
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(1)
       expect(results[0]['title']).to eq('How to Read a Book')
       expect(results[0]['authors'].count).to eq(2)
+    end
+
+    it 'adds a book with subjects' do
+      post '/books?isbn=9780671212094&title=How to Read a Book&authors[]=Adler,Mortimer&authors[]=Van Doren,Charles&subjects[]=non-fiction'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?isbn=9780671212094&summary=false'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(1)
+      expect(results[0]['subjects']).to include({'subject' => 'non-fiction'})
     end
   end
 
@@ -248,30 +220,33 @@ RSpec.describe HomeLibraryManager do
 
     it 'allows me to add a subject' do
       put '/books?isbn=9781593082444&subject=Fiction'
-
+      response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
-      get '/books?isbn=9781593082444'
+      get '/books?isbn=9781593082444&summary=false'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
       results = response['results']
-
     end
 
     it 'does not add a subject twice' do
       put '/books?isbn=9781593082444&subject=Fiction'
-
       expect(response['successful']).to be_falsey
     end
 
     it 'allows me to remove a subject' do
-      put '/books?isbn&=9781593082444&subject=Philosophy&remove'
+      put '/books?isbn=9781593082444&subject=Philosophy&remove'
+      response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
     end
 
     it 'allows me to add an author' do
+      put '/books?isbn=9781593082444&authors[]=Dude,Some'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
 
+      expect(Authors.all(:book => {:isbn => '9781593082444'}).size).to eq(2)
     end
   end
 
