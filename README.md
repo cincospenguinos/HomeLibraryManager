@@ -32,6 +32,7 @@ I'm thinking that we can setup a few different heirarchies for different queries
         or not
         * last_name - string. Last name of the author
         * subject - string. Books that have a given subject
+        * title - string. Books matching the title provided
 
 ## Contributing
 

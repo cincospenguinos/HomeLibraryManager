@@ -43,7 +43,6 @@ class HomeLibraryManager < Sinatra::Base
 
   ## Run queries on current books in the library
   get '/books' do
-    # TODO: Verify the parameters?
     books = Book.all
 
     # Check each of the parameters
@@ -63,6 +62,22 @@ class HomeLibraryManager < Sinatra::Base
       end
     end
 
+    if params['subject']
+      params['subject'] = [params['subject']] unless params['subject'].is_a?(Array)
+
+      params['subject'].each do |subject|
+        books = books.all(:subjects => {:subject => subject})
+      end
+    end
+
+    if params['title']
+      params['title'] = [params['title']] unless params['title'].is_a?(Array)
+
+      params['title'].each do |title|
+        books = books.all(:title => title)
+      end
+    end
+    
     data = []
 
     if !params['summary'] || params['summary'] == 'true'

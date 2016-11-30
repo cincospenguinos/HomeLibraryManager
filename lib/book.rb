@@ -16,6 +16,9 @@ class Book
   #@return [String] the title of this book
   property :title, String, :required => true
 
+  #@return [String] the dewey decimal number of this book
+  property :dewey, String, :required => false
+
   has n, :authors
   has n, :subjects
   has n, :reviews
