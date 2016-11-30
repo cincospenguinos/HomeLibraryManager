@@ -719,6 +719,10 @@ RSpec.describe HomeLibraryManager do
     end
   end
 
+  context 'when browsing reviews' do
+    # TODO: All of this
+  end
+
   # Helper method. Destroys all the things.
   def destroy_all
     CheckoutEvent.all.destroy!

@@ -76,6 +76,20 @@ DELETE '/books?isbns[]=9781593082444' => Removes the book matching the provided 
 DELETE '/books?isbns[]=9781593082444&isbns[]=9780743297332' => Removes the books matching the provided ISBNs
 ```
 
+### GET '/checkout'
+
+Browse who has checked out what books from the library. Acts just like `GET '/books'`. Valid parameters are `last_name`
+and `first_name`.
+
+### POST '/checkout'
+
+Indicates to the service that someone is checking out a book. Requires `isbn`, `last_name` and `first_name`. Optional
+parameters are `email_address` and `phone_number`.
+
+### POST '/checkin'
+
+Checks in a book that has been checked out. Requires parameter `isbn`.
+
 ## Contributing
 
 You can contribute by submitting code, submitting a feature/enhancement or submitting a bug.

@@ -285,6 +285,36 @@ class HomeLibraryManager < Sinatra::Base
     send_response(true, {}, '')
   end
 
+  get '/reviews' do
+    reviews = Review.all
+
+    # Check each of the parameters
+    if params['isbn']
+      params['isbn'] = params['isbn'][0] if params['isbn'].is_a?(Array)
+      reviews = reviews.all(:book => {:isbn => params['isbn']})
+    end
+
+    if params['last_name']
+      params['last_name'] = params['last_name'][0] if params['last_name'].is_a?(Array)
+
+      reviews = reviews.all(:last_name => params['last_name'])
+    end
+
+    if params['first_name']
+      params['first_name'] = params['first_name'][0] if params['first_name'].is_a?(Array)
+
+      reviews = reviews.all(:last_name => params['first_name'])
+    end
+
+    if params['title']
+      params['title'] = params['title'][0] if params['title'].is_a?(Array)
+
+      reviews = reviews.all(:book => {:title => params['title']})
+    end
+
+    send_response(true, reviews, '')
+  end
+
   # Submit a review on a book
   post '/reviews' do
     return send_response(false, {}, 'Some parameters are missing') unless params['isbn'] && params['last_name'] && params['first_name'] && params['review_text']
