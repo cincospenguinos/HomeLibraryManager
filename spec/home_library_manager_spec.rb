@@ -293,30 +293,37 @@ RSpec.describe HomeLibraryManager do
 
   context 'when deleting books from the library' do
 
+    before(:all) do
+      destroy_all
+    end
+
     after(:each) do
       destroy_all
     end
 
     it 'deletes a book when given an isbn number' do
-      post '/books?isbn=9780671212094&title=How to Read a Book&author_last=Adler&author_first=Mortimer'
-      get '/books?title=How to Read a Book'
-      results = JSON.parse(last_response.body)['results']
-      expect(results.size).to eq(1)
-
-      delete '/books?isbn=9780671212094'
+      post '/books?isbn=9780671212094&title=How to Read a Book&authors[]=Adler,Mortimer'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
-      get '/books?isbn=978-0-671-21209-4'
+      get '/books?isbn=9780671212094'
+      results = JSON.parse(last_response.body)['results']
+      expect(results.size).to eq(1)
+
+      delete '/books?isbns[]=9780671212094'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      get '/books?isbn=9780671212094'
       results = JSON.parse(last_response.body)['results']
       expect(results.size).to eq(0)
     end
 
     it 'deletes a book with its author when given an isbn number' do
-      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
 
-      delete '/books?isbn=978-0-671-21209-4'
+      delete '/books?isbns[]=9780671212094'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -326,11 +333,11 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes a book with all of its authors when it has multiple authors' do
-      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
 
-      delete '/books?isbn=978-0-671-21209-4'
+      delete '/books?isbns[]=9780671212094'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -340,12 +347,12 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes a book with a subject on it' do
-      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
 
-      delete '/books?isbn=978-0-671-21209-4'
+      delete '/books?isbns[]=9780671212094'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -355,13 +362,13 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes a book with more than one subject on it' do
-      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
       Subject.create!(:subject => 'Literary Studies', :book => book)
 
-      delete '/books?isbn=978-0-671-21209-4'
+      delete '/books?isbns[]=9780671212094'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -371,13 +378,13 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes a book even if it is checked out' do
-      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
       borrower = Borrower.create!(:last_name => 'Roch', :first_name => 'Mike')
       CheckoutEvent.create!(:date_taken => DateTime.now, :borrower => borrower, :book => book)
 
-      delete '/books?isbn=978-0-671-21209-4'
+      delete '/books?isbns[]=9780671212094'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -387,7 +394,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes a book with a whole lot of information on it' do
-      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
       borrower = Borrower.create!(:last_name => 'Roch', :first_name => 'Mike')
@@ -396,7 +403,7 @@ RSpec.describe HomeLibraryManager do
       Subject.create!(:subject => 'Literary Studies', :book => book)
       Review.create!(:first_name => 'Joe', :last_name => 'Doug', :review_text => 'This book was good.', :date => DateTime.now, :book => book)
 
-      delete '/books?isbn=978-0-671-21209-4'
+      delete '/books?isbns[]=9780671212094'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
@@ -406,11 +413,10 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes multiple books at a time' do
-      # get '/books'
-      post '/books?title=How to Read a Book&author_last=Adler&author_first=Mortiemer&isbn=978-0-671-21209-4'
-      post '/books?title=Notes from Underground&author_last=Dostoevsky&author_first=Fyodor&isbn=978-0-679-73452-9'
+      post '/books?title=How to Read a Book&author_last=Adler&author_first=Mortiemer&isbn=9780671212094'
+      post '/books?title=Notes from Underground&author_last=Dostoevsky&author_first=Fyodor&isbn=9780679734529'
 
-      delete '/books?isbn[]=978-0-671-21209-4&isbn[]=978-0-679-73452-9'
+      delete '/books?isbns[]=9780671212094&isbns[]=9780679734529'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 

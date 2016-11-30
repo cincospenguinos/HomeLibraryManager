@@ -53,3 +53,4 @@ library_config.yml
 .rbenv-gemsets
 .ruby-version
 Gemfile.lock
+.rspec

@@ -36,7 +36,6 @@ class HomeLibraryManager < Sinatra::Base
 
   ## Show the index file
   get '/' do
-    # TODO: Something nicer for this
     content_type :html
     erb :index
   end
@@ -200,9 +199,22 @@ class HomeLibraryManager < Sinatra::Base
     send_response(true, {}, '')
   end
 
-  # Remove a book from the library
+  ## Remove a book from the library
   delete '/books' do
-    # TODO: This
+    return send_response(false, {}, 'ISBN is a necessary parameter') unless params['isbns']
+    params['isbns'] = [params['isbns']] unless params['isbns'].is_a?(Array)
+
+    params['isbns'].each do |isbn|
+      book = Book.first(:isbn => isbn)
+      next unless book
+      Author.all(:book => book).destroy
+      Subject.all(:book => book).destroy
+      Review.all(:book => book).destroy
+      CheckoutEvent.all(:book => book).destroy
+      book.destroy
+    end
+
+    send_response(true, {}, '')
   end
 
   # Browse who has checked out what books
