@@ -18,6 +18,10 @@ RSpec.describe HomeLibraryManager do
     destroy_all
   end
 
+  it 'returns the index page' do
+    get '/'
+  end
+
   context 'when searching for books in the library' do
 
     before(:all) do

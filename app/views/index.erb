@@ -1,10 +1,47 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <title>Modify this page!</title>
+    <title>Home Library</title>
+    <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="style/bootstrap-theme.min.css"/>
+    <script src="script/jquery.min.js"></script>
+    <script src="script/bootstrap.min.js"></script>
+    <script src="script/index.js"></script>
   </head>
   <body>
-    <h1>Modify this page!</h1>
-    <p>Modify this page however you'd like! It gets loaded by default on a GET request at '/' for this service</p>
+    <div class="container" role="main">
+      <div class="jumbotron">
+        <h1>LaFleur Home Library</h1>
+        <p>The LaFleur's Home Library, with all the books one could ever want.</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12 col-sm-12">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <td>ISBN</td>
+                <td>Title</td>
+                <td>Authors</td>
+                <td>Status</td>
+              </tr>
+            </thead>
+            <tbody id="book_table">
+              <tr>
+                <td rowspan="2">9780671212094</td>
+                <td rowspan="2">How to Read a Book</td>
+                <td>Mortimer Adler</td>
+                <td rowspan="2"><span class="label label-success">CHECKED IN</span></td>
+              </tr>
+              <tr>
+                <td>Charles Van Doren</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
