@@ -9,7 +9,7 @@ to run alongside any number of other Sinatra services (hence it is built in the 
 
 ## How do I use it?
 
-Simply throw a RESTful request at different URLs registered with the service. The service will always respond with a JSON
+Simply throw an HTTP request at different URLs registered with the service. The service will always respond with a JSON
 string as follows:
 
 ```
@@ -20,19 +20,48 @@ string as follows:
 }
 ```
 
-### How this will work
+### GET '/books'
 
-I'm thinking that we can setup a few different heirarchies for different queries.
+This method will return all of the books that match all of the given parameters. Permitted parameters
+are `last_name`, `subject`, and `title`. By default only a summary of each book is returned.
+You can request detailed information by passing `summary=false` as a parameter as well. Below
+are some examples.
 
-* get '/books' will return all the books
-    * Including search parameters narrows down the search. The search will always use
-    the AND operator.
-    * Permitted parameters:
-        * summary - boolean. Default: true. Determines whether the service will return a summary
-        or not
-        * last_name - string. Last name of the author
-        * subject - string. Books that have a given subject
-        * title - string. Books matching the title provided
+```
+GET '/books' => returns all the books in the library
+GET '/books?summary=false' => returns detailed information about all the books in the library
+GET '/books?last_name=Dostoevsky' => returns all books written by Dostoevsky
+GET '/books?last_name=Dostoevsky&subject=fiction' => returns all fiction works by Dostoevsky
+GET '/books?last_name=Dostoevsky&subject[]=fiction&subject[]=philosophy' => returns all works by Dostoevsky that are both fictional and philosophical
+```
+
+### POST '/books'
+
+Add a book to the library. The required parameters are `authors`, `title`, and `isbn`. Optional
+parameters are `subjects`. This method will not save anything if the proper parameters do not
+exist.
+
+When submitting an author in `authors`, the service expects the user to provide the author's names
+separated with a comma. Thus `authors[]=More,Thomas` is acceptable, but `authors[]=Thomas More`
+is not. If the user submits `authors[]=Thomas,More`, then the book's author will be listed as 
+"More Thomas".
+
+If there is no first name for a given author, then simply pass `authors[]=last_name,`.
+
+```
+POST '/books?authors[]=More,Thomas&isbn=9781593082444&title=Utopia' => Adds Utopia by Thomas More
+POST '/books?authors[]=More,Thomas&isbn=9781593082444&title=Utopia&subjects[]=philosophy' => Adds Utopia by Thomas More with subject "philosophy"
+POST '/books?authors[]=Thomas,More&isbn=9781593082444&title=Utopia' => Adds Utopia by More Thomas
+POST '/books?authors[]=More,Thomas&title=Utopia' => Adds nothing
+```
+
+### PUT '/books'
+
+Update information about a book that exists in the library.
+
+### DELETE '/books'
+
+Delete a specific book from the library.
 
 ## Contributing
 

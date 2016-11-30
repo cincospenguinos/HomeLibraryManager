@@ -13,7 +13,7 @@ class Author
   property :last_name, String, :required => true
 
   #@return [String] the first name of this author
-  property :first_name, String, :required => true
+  property :first_name, String, :required => false
 
   belongs_to :book
 

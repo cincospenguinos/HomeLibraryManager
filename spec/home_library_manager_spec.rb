@@ -1,16 +1,14 @@
 require File.expand_path '../spec_helper', __FILE__
 
-# TODO: Fix these
 RSpec.describe HomeLibraryManager do
 
   before(:all) do
-    # TODO: Make a test schema
     @config = YAML.load(File.read('library_config.yml'))[:test]
     db_config = @config[:database]
     data_mapper_config = @config[:data_mapper]
     DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
 
-    if data_mapper_config[:logger_std_out] # TODO: Log to file?
+    if data_mapper_config[:logger_std_out]
       DataMapper::Logger.new($stdout, :debug, '[DataMapper]') # for debugging
     end
 
@@ -241,6 +239,42 @@ RSpec.describe HomeLibraryManager do
     end
   end
 
+  context 'when modifying books in the library' do
+    # TODO: All of these
+
+    after(:each) do
+      destroy_all
+    end
+
+    it 'allows me to add a subject' do
+      put '/books?isbn=9781593082444&subject=Fiction'
+
+      expect(response['successful']).to be_truthy
+
+      get '/books?isbn=9781593082444'
+      response = JSON.parse(last_response.body)
+      expect(response['successful']).to be_truthy
+
+      results = response['results']
+
+    end
+
+    it 'does not add a subject twice' do
+      put '/books?isbn=9781593082444&subject=Fiction'
+
+      expect(response['successful']).to be_falsey
+    end
+
+    it 'allows me to remove a subject' do
+      put '/books?isbn&=9781593082444&subject=Philosophy&remove'
+      expect(response['successful']).to be_truthy
+    end
+
+    it 'allows me to add an author' do
+
+    end
+  end
+
   context 'when deleting books from the library' do
 
     after(:each) do
@@ -248,12 +282,12 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'deletes a book when given an isbn number' do
-      post '/books?isbn=978-0-671-21209-4&title=How to Read a Book&author_last=Adler&author_first=Mortimer'
+      post '/books?isbn=9780671212094&title=How to Read a Book&author_last=Adler&author_first=Mortimer'
       get '/books?title=How to Read a Book'
       results = JSON.parse(last_response.body)['results']
       expect(results.size).to eq(1)
 
-      delete '/books?isbn=978-0-671-21209-4'
+      delete '/books?isbn=9780671212094'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 

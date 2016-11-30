@@ -105,6 +105,13 @@ class HomeLibraryManager < Sinatra::Base
 
   ## Add a book to the library
   post '/books' do
+    # TODO: Verify the parameters
+    # TODO: Create the book and verify if it worked
+    puts "#{params}"
+  end
+
+  ## Modify something to a book that already exists in the library
+  put '/books' do
     # TODO: This
   end
 
