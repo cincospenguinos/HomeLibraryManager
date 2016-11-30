@@ -38,7 +38,8 @@ class Book
     {
         :title => title,
         :authors => authors,
-        :checked_out => checked_out?
+        :checked_out => checked_out?,
+        :isbn => isbn
     }
   end
 

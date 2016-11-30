@@ -57,11 +57,24 @@ POST '/books?authors[]=More,Thomas&title=Utopia' => Adds nothing
 
 ### PUT '/books'
 
-Update information about a book that exists in the library.
+Update information about a book that exists in the library. Requires the parameter `isbn`, with optional parameters
+of `authors` and `subjects`. The same expectations apply for the authors parameter for this method as with `POST '/books'`.
+You can remove a piece of information from a book using the `remove` parameter. The default for `remove` is `false`.
+
+```
+PUT '/books?isbn=9781593082444&authors[]=Cool,Joe' => Adds the author 'Joe Cool' to the book
+PUT '/books?isbn=9781593082444&subjects[]=Fiction' => Adds the subject 'Fiction' to the book
+PUT '/books?isbn=9781593082444&subjects[]=Fiction&subjects[]=Philosophy&remove=true' => Removes the subjects "Fiction" and "Philosophy" from the book
+```
 
 ### DELETE '/books'
 
-Delete a specific book from the library.
+Delete a specific book from the library. Requires only a list of `isbns` to delete.
+
+```
+DELETE '/books?isbns[]=9781593082444' => Removes the book matching the provided ISBN
+DELETE '/books?isbns[]=9781593082444&isbns[]=9780743297332' => Removes the books matching the provided ISBNs
+```
 
 ## Contributing
 

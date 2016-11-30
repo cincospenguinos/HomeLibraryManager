@@ -428,7 +428,7 @@ RSpec.describe HomeLibraryManager do
 
   context 'when checking out a book from the library' do
     before(:each) do
-      book = Book.create!(:isbn => '978-0-7432-9733-2', :title => 'The Sun Also Rises')
+      book = Book.create!(:isbn => '9780743297332', :title => 'The Sun Also Rises')
       Author.create!(:last_name => 'Hemingway', :first_name => 'Ernest', :book => book)
     end
 
@@ -443,32 +443,32 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'checks out a book on the current date and time when given the proper information' do
-      post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2'
+      post '/checkout?last_name=Doe&first_name=John&isbn=9780743297332'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
-      get '/books?checked_out=true'
+      get '/books?checked_out=true&summary=false'
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['isbn']).to eq('978-0-7432-9733-2')
+      expect(results[0]['isbn']).to eq('9780743297332')
     end
 
     it 'checks out a book and includes the email address and phone number of the person provided' do
-      post '/checkout?last_name=Doe&first_name=John&isbn=978-0-7432-9733-2&email_address=john@doe.org&phone_number=KL5-3226'
+      post '/checkout?last_name=Doe&first_name=John&isbn=9780743297332&email_address=john@doe.org&phone_number=KL5-3226'
       response = JSON.parse(last_response.body)
       expect(response['successful']).to be_truthy
 
       get '/books?checked_out=true'
       results = JSON.parse(last_response.body)['results']
       expect(results.count).to eq(1)
-      expect(results[0]['isbn']).to eq('978-0-7432-9733-2')
+      expect(results[0]['isbn']).to eq('9780743297332')
 
       get '/checkout?last_name=Doe'
       results = JSON.parse(last_response.body)['results']
 
       expect(results.count).to eq(1)
-      expect(results[0]['books'][0]['isbn']).to eq('978-0-7432-9733-2')
+      expect(results[0]['books'][0]['isbn']).to eq('9780743297332')
       expect(results[0]['borrower']['last_name']).to eq('Doe')
       expect(results[0]['borrower']['first_name']).to eq('John')
       expect(results[0]['borrower']['email_address']).to eq('john@doe.org')

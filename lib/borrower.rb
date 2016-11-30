@@ -23,7 +23,7 @@ class Borrower
 
   has n, :checkout_event
 
-  def as_json(options = nil)
-    super({:only => [:last_name, :first_name, :date_taken, :date_returned, :phone_number, :email_address]}.merge(options || {}))
-  end
+  # def as_json(options = nil)
+  #   super({:only => [:last_name, :first_name, :date_taken, :date_returned, :phone_number, :email_address]}.merge(options || {}))
+  # end
 end

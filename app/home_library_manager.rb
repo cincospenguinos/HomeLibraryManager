@@ -217,14 +217,56 @@ class HomeLibraryManager < Sinatra::Base
     send_response(true, {}, '')
   end
 
-  # Browse who has checked out what books
+  ## Browse who has checked out what books
   get '/checkout' do
-    # TODO: This
+    borrowers = Borrower.all
+
+    if params['last_name']
+      params['last_name'] = [params['last_name']] unless params['last_name'].is_a?(Array)
+
+      params['last_name'].each do |last_name|
+        borrowers = borrowers.all(:last_name => last_name)
+      end
+    end
+
+    if params['first_name']
+      params['first_name'] = [params['first_name']] unless params['first_name'].is_a?(Array)
+
+      params['first_name'].each do |first_name|
+        borrowers = borrowers.all(:first_name => first_name)
+      end
+    end
+
+    results = []
+
+    borrowers.each do |borrower|
+      tmp = {}
+      books = []
+      Book.all(:checkout_event => {:borrower => borrower}).each { |book| books.push(book.summary) if book.checked_out? }
+      tmp[:borrower] = borrower
+      tmp[:books] = books
+      results.push(tmp)
+    end
+
+    # TODO: Figure out response
+    send_response(true, results, '')
   end
 
   # Let the service know a book is being checked out
   post '/checkout' do
-    # TODO: This
+    return send_response(false, {}, 'One or more parameters were missing') unless params['isbn'] && params['last_name'] && params['first_name']
+
+    book = Book.first(:isbn => params['isbn'])
+    return send_response(false, {}, 'There is no book in the library with that ISBN') unless book
+    return send_response(false, {}, 'That book is currently checked out') if book.checked_out?
+
+    borrower = Borrower.first_or_create(:last_name => params['last_name'], :first_name => params['first_name'])
+    borrower.update(:phone_number => params['phone_number']) if params['phone_number'] && !borrower.phone_number.nil?
+    borrower.update(:email_address => params['email_address']) if params['email_address'] && !borrower.email_address.nil?
+
+    evt = CheckoutEvent.create(:date_taken => DateTime.now, :borrower => borrower, :book => book)
+    return send_response(false, {}, 'Event could not be created') unless evt
+    send_response(true, {}, '')
   end
 
   # Let the service know a book is being checked in
