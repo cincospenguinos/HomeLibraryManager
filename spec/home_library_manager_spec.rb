@@ -706,7 +706,6 @@ RSpec.describe HomeLibraryManager do
 
     it 'saves a review when handed the proper information' do
       post "/reviews?last_name=#{@review[:last]}&first_name=#{@review[:first]}&review_text=#{@review[:review_text]}&isbn=#{@review[:isbn]}"
-      herp = JSON.parse(last_response.body)
       expect(JSON.parse(last_response.body)['successful']).to be_truthy
       get "/books?isbn=#{@review[:isbn]}"
       expect(JSON.parse(last_response.body)['results'].count).to eq(1)
