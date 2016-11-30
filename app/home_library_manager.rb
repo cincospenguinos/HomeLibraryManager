@@ -19,6 +19,7 @@ class HomeLibraryManager < Sinatra::Base
   # TODO: Configure :prod, :dev, :test?
   # TODO: Create a client with javascript and stuff
   # TODO: Defend against code injection attacks
+  # TODO: Better README
 
   before do
     content_type 'application/json'
@@ -289,7 +290,11 @@ class HomeLibraryManager < Sinatra::Base
     return send_response(false, {}, 'Some parameters are missing') unless params['isbn'] && params['last_name'] && params['first_name'] && params['review_text']
     book = Book.first(:isbn => params['isbn'])
     return send_response(false, {}, "There is not book with ISBN #{params['isbn']}") unless book
-    Review.create(:book => book, :last_name => params['last_name'], :first_name => params['first_name'], :review_text => params['review_text'])
+    begin
+      Review.create(:book => book, :last_name => params['last_name'], :first_name => params['first_name'], :review_text => params['review_text'])
+    rescue SaveFailureError
+      puts "#{Review.errors}"
+    end
     send_response(true, {}, '')
   end
 
