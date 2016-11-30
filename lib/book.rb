@@ -29,14 +29,25 @@ class Book
     evt.checked_out?
   end
 
-  def to_json(*args)
-    data = {
-      :isbn => isbn,
-      :title => title,
-      :authors => Author.all(:book => self),
-      :subjects => Subject.all(:book => self),
-      :checked_out => checked_out?,
-      :reviews => Review.all(:book => self)
-    }.to_json
+  # Returns a hash containing just a summary of the book
+  # @return [Hash] summary of the book
+  def summary
+    {
+        :title => title,
+        :authors => authors,
+        :checked_out => checked_out?
+    }
+  end
+
+  # Returns a hash containing all of the info of the book
+  # @return [Hash] all the info of the book
+  def full_info
+    {
+        :isbn => isbn,
+        :title => title,
+        :authors => authors,
+        :subjects => subjects,
+        :reviews => reviews
+    }
   end
 end

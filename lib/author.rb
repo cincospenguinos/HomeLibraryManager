@@ -1,6 +1,6 @@
 # author.rb
 #
-# Class representing an author of a boo
+# Class representing an author of a book
 require 'data_mapper'
 
 class Author

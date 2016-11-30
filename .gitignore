@@ -51,5 +51,4 @@ build-iPhoneSimulator/
 library_config.yml
 .idea
 .rbenv-gemsets
-*.html
-.ruby_version
+.ruby-version

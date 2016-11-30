@@ -1,32 +1,45 @@
 require File.expand_path '../spec_helper', __FILE__
 
+# TODO: Fix these
 RSpec.describe HomeLibraryManager do
 
   before(:all) do
-    get '/' # This ensures that the DB is initialized and running properly
+    # TODO: Make a test schema
+    @config = YAML.load(File.read('library_config.yml'))
+    db_config = @config[:database]
+    data_mapper_config = @config[:data_mapper]
+    DataMapper.setup(:default, "#{db_config[:db_engine]}://#{db_config[:db_user]}:#{db_config[:db_password]}@#{db_config[:db_hostname]}/#{db_config[:db_name]}")
+
+    if data_mapper_config[:logger_std_out] # TODO: Log to file?
+      DataMapper::Logger.new($stdout, :debug, '[DataMapper]') # for debugging
+    end
+
+    DataMapper::Model.raise_on_save_failure = data_mapper_config[:raise_on_save_failure]
+    DataMapper.finalize
+    DataMapper.auto_migrate!
     destroy_all
   end
 
   context 'when searching for books in the library' do
 
     before(:all) do
-      book = Book.create!(:isbn => '978-0-671-21209-4', :title => 'How to Read a Book')
+      book = Book.create!(:isbn => '9780671212094', :title => 'How to Read a Book')
       Author.create!(:last_name => 'Adler', :first_name => 'Mortimer', :book => book)
       Author.create!(:last_name => 'Van Doren', :first_name => 'Charles', :book => book)
       Subject.create!(:subject => 'Non-Fiction', :book => book)
       Subject.create!(:subject => 'Literary Theory', :book => book)
 
-      book = Book.create!(:isbn => '978-0-679-73452-9', :title => 'Notes from Underground')
+      book = Book.create!(:isbn => '9780679734529', :title => 'Notes from Underground')
       Author.create!(:last_name => 'Dostoevsky', :first_name => 'Fyodor', :book => book)
       Subject.create!(:subject => 'Fiction', :book => book)
       Subject.create!(:subject => 'Literature', :book => book)
       Review.create!(:last_name => 'Doe', :first_name => 'Jane', :date => DateTime.now, :book => book, :review_text => 'It was good.')
 
-      book = Book.create!(:isbn => '978-1-59308-244-4', :title => 'Utopia')
+      book = Book.create!(:isbn => '9781593082444', :title => 'Utopia')
       Author.create!(:last_name => 'More', :first_name => 'Thomas', :book => book)
       Subject.create!(:subject => 'Philosophy', :book => book)
 
-      book = Book.create!(:isbn => '978-0-7434-7712-3', :title => 'Hamlet')
+      book = Book.create!(:isbn => '9780743477123', :title => 'Hamlet')
       Author.create!(:last_name => 'Shakespeare', :first_name => 'William', :book => book)
       Subject.create!(:subject => 'Fiction', :book => book)
       Subject.create!(:subject => 'Theatre', :book => book)
@@ -38,7 +51,7 @@ RSpec.describe HomeLibraryManager do
         destroy_all
     end
 
-    it 'returns all the books in the library when asked' do
+    it 'returns all the books in the library' do
       get '/books'
 
       response = JSON.parse(last_response.body)
@@ -46,8 +59,16 @@ RSpec.describe HomeLibraryManager do
       expect(response['results'].count).to eq(4)
     end
 
+    it 'returns all the full information on the books in the library' do
+      get '/books?summary=false'
+
+      response = JSON.parse(last_response.body)
+
+      # TODO: Expectations
+    end
+
     it 'returns reviews for each of the books included, given that there are any' do
-      get '/books?isbn=978-0-679-73452-9'
+      get '/books?isbn=9780679734529'
 
       response = JSON.parse(last_response.body)
       expect(response['results'].count).to eq(1)
@@ -64,7 +85,7 @@ RSpec.describe HomeLibraryManager do
     end
 
     it 'returns books written by a specific author when asked' do
-      get '/books?author_last=Dostoevsky'
+      get '/books?last_name=Dostoevsky'
 
       response = JSON.parse(last_response.body)
 
