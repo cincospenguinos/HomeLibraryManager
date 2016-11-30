@@ -1,10 +1,14 @@
 source 'https://rubygems.org'
 
 gem 'rake'
-gem 'sinatra' # What the service is based off of
-gem 'rspec' # What we're using to test stuff withgem 'sequel'
-gem 'data_mapper' # ORM
+gem 'rack'
+gem 'sinatra'
+gem 'rspec'
+gem 'data_mapper'
 gem 'rack-test'
 
-gem 'dm-mysql-adapter' # If you're using MySQL
+# Uncomment the DB adapter you intend to use
+gem 'dm-mysql-adapter'
+# gem 'dm-sqlite-adapter'
+# gem 'dm-postgres-adapter'
 gem 'coveralls', require: false

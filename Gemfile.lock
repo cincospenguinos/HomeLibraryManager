@@ -108,10 +108,11 @@ DEPENDENCIES
   coveralls
   data_mapper
   dm-mysql-adapter
+  rack
   rack-test
   rake
   rspec
   sinatra
 
 BUNDLED WITH
-   1.12.5
+   1.13.6
