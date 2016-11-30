@@ -13,7 +13,7 @@ class Review
   property :review_text, Text, :required => true
 
   #@return [DateTime] the date this review was published
-  property :date, DateTime, :required => true
+  property :date, DateTime, :default => DateTime.now
 
   #@return [String] the last name of the reviewer
   property :last_name, String, :required => true

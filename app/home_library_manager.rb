@@ -290,11 +290,8 @@ class HomeLibraryManager < Sinatra::Base
     return send_response(false, {}, 'Some parameters are missing') unless params['isbn'] && params['last_name'] && params['first_name'] && params['review_text']
     book = Book.first(:isbn => params['isbn'])
     return send_response(false, {}, "There is not book with ISBN #{params['isbn']}") unless book
-    begin
-      Review.create(:book => book, :last_name => params['last_name'], :first_name => params['first_name'], :review_text => params['review_text'])
-    rescue SaveFailureError
-      puts "#{Review.errors}"
-    end
+    Review.create(:book => book, :last_name => params['last_name'], :first_name => params['first_name'],
+                  :review_text => params['review_text'])
     send_response(true, {}, '')
   end
 
